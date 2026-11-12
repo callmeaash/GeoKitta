@@ -1,0 +1,74 @@
+/* Map viewer additions to the design system: Leaflet, hints, labels and the mobile sheet. */
+
+.map { position: relative; flex: 1; min-width: 0; overflow: hidden; background: var(--map-land); user-select: none;
+  isolation: isolate; } /* keeps Leaflet's z-indexes inside the map, under the search dropdown */
+.leaflet-host { position: absolute; inset: 0; background: var(--map-land); font-family: var(--font-sans); }
+.map > :not(.leaflet-host) { z-index: 1000; }
+.leaflet-host.drawing, .leaflet-host.drawing .leaflet-interactive { cursor: crosshair; }
+.leaflet-container a { color: var(--color-primary); }
+.tiles-light { filter: grayscale(1) brightness(1.07) contrast(.88); } /* muted OSM tiles behind the parcels */
+.leaflet-control-attribution { font-size: 10.5px; }
+.leaflet-control-scale-line { border-color: #334155; color: var(--color-text); background: rgba(255, 255, 255, .85); }
+.leaflet-bottom.leaflet-left { margin-bottom: 4px; }
+
+.legend { bottom: 44px; }
+.sw-buffer { background: rgba(2, 132, 199, .18); border: 1px solid var(--map-buffer); }
+
+.parcel-label {
+  font-size: 11px; font-weight: 600; color: var(--map-parcel); white-space: nowrap; pointer-events: none;
+  transform: translate(-50%, -50%); text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
+}
+
+.map-hint {
+  position: absolute; top: 16px; left: 50%; transform: translateX(-50%); max-width: calc(100% - 340px);
+  padding: 7px 12px; border-radius: 999px; background: rgba(255, 255, 255, .95); border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-float); font-size: 12.5px; color: var(--color-text); text-align: center;
+}
+.drawing-hint { background: var(--color-heading); border-color: var(--color-heading); color: #fff; }
+.drawing-hint .link { color: #5EEAD4; }
+
+.panel { position: relative; }
+.sheet-close { display: none; }
+.back { margin: 0 0 10px; font-size: 13px; }
+.stats-note {
+  margin: 16px 0 0; padding: 8px 10px; border-radius: var(--radius-sm); background: var(--color-bg);
+  font-size: 11.5px; color: var(--color-muted); font-variant-numeric: tabular-nums;
+}
+.pick-row { display: flex; gap: 8px; align-items: center; }
+.pick-row .input-like { flex: 1; min-width: 0; overflow: hidden; }
+.pick-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kv.measure dd { font-size: 15px; }
+.results { margin-top: 4px; }
+.res-row .k { flex: 1; min-width: 0; }
+.res-row .k small { display: block; margin-top: 1px; font-size: 12px; font-weight: 400; color: var(--color-muted); }
+
+/* Phones and narrow windows: full-screen map, tools along the bottom, the panel as a sheet above them */
+@media (max-width: 760px) {
+  .app { grid-template-rows: 56px 24px 1fr; }
+  .topbar { gap: 10px; padding: 0 10px; }
+  .brand { min-width: 0; }
+  .brand-name, .brand-sub, .top-actions { display: none; }
+  .strip { height: 24px; font-size: 11px; }
+  .main { position: relative; flex-direction: column; }
+  .map { order: 1; }
+  .rail {
+    order: 2; width: 100%; height: 60px; flex-direction: row; justify-content: space-around; padding: 4px 6px;
+    border-right: none; border-top: 1px solid var(--color-border);
+  }
+  .rail button { width: 60px; height: 50px; }
+  .rail button.active::before { left: 14px; right: 14px; top: -5px; bottom: auto; width: auto; height: 3px; }
+  .panel {
+    display: none; position: absolute; left: 0; right: 0; bottom: 60px; z-index: 1100; width: auto; max-height: 55%;
+    border: none; border-radius: 16px 16px 0 0; box-shadow: 0 -8px 24px rgba(15, 23, 42, .15);
+  }
+  .panel.open { display: block; }
+  .sheet-close {
+    display: flex; justify-content: center; width: 100%; padding: 8px 0 0; border: none; background: none; cursor: pointer;
+  }
+  .sheet-close .handle { width: 40px; height: 4px; border-radius: 2px; background: #CBD5E1; }
+  .empty { padding: 28px 24px; }
+  .legend { display: none; }
+  .map-hint { max-width: calc(100% - 80px); top: 10px; }
+  .basemap { top: auto; bottom: 30px; right: 10px; }
+  .controls { top: 10px; right: 10px; }
+}

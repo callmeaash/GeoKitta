@@ -112,9 +112,11 @@ def polygon_intersects_box(polygon: Polygon, box: Box) -> bool:
 
 
 def line_distance(polygon: Polygon, line: list[Point]) -> float:
-    """Shortest distance between a polygon and a polyline; 0 if they touch or the line runs inside."""
+    """Shortest distance between a polygon and a polyline (or a single point); 0 if they touch or it runs inside."""
     if any(locate(p, polygon) != OUTSIDE for p in line):
         return 0.0
+    if len(line) == 1:
+        return boundary_distance(line[0], polygon)
     best = math.inf
     for ring in polygon:
         for p, q in edges(ring):
@@ -123,3 +125,48 @@ def line_distance(polygon: Polygon, line: list[Point]) -> float:
                 if best == 0.0:
                     return 0.0
     return best
+
+
+def ring_area(ring: Ring) -> float:
+    """Shoelace formula: absolute area enclosed by a closed ring."""
+    return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in edges(ring))) / 2
+
+
+def polygon_area(polygon: Polygon) -> float:
+    return ring_area(polygon[0]) - sum(ring_area(h) for h in polygon[1:])
+
+
+def chunk_line(line: list[Point], max_length: float = 100.0) -> list[list[Point]]:
+    """Split a polyline into runs of about max_length metres, so a long river is searched piece by piece."""
+    if len(line) == 1:
+        return [line]
+    chunks, current, length = [], [line[0]], 0.0
+    for a, b in zip(line, line[1:]):
+        current.append(b)
+        length += math.hypot(b[0] - a[0], b[1] - a[1])
+        if length >= max_length:
+            chunks.append(current)
+            current, length = [b], 0.0
+    if len(current) > 1:
+        chunks.append(current)
+    return chunks
+
+
+def expand(box: Box, d: float) -> Box:
+    return box[0] - d, box[1] - d, box[2] + d, box[3] + d
+
+
+def within_distance(polygon: Polygon, line: list[Point], d: float) -> bool:
+    """True if the polyline (or point) comes within d of the polygon; stops at the first close edge pair."""
+    pbox = box_of(polygon[0])
+    if len(line) == 1:
+        p = line[0]
+        return boxes_touch(expand((p[0], p[1], p[0], p[1]), d), pbox) and point_distance(p, polygon) <= d
+    for a, b in zip(line, line[1:]):
+        if not boxes_touch(expand(box_of((a, b)), d), pbox):
+            continue  # this segment is too far from the parcel's box
+        for ring in polygon:
+            if any(segment_distance(p, q, a, b) <= d for p, q in edges(ring)):
+                return True
+    # no boundary edge is within d, so the line is either wholly inside the polygon or farther than d
+    return locate(line[0], polygon) == INSIDE

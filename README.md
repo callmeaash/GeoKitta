@@ -55,6 +55,8 @@ cd frontend
 npm run dev
 ```
 
+The public map viewer opens at http://localhost:5173. Zoom in to see parcel outlines, or click anywhere to identify a parcel. The tools are Details, Select (rectangle or line), Buffer (point, line, or road/river with its setback rule), Measure and Layers. Links such as `#map=18/27.70660/85.31120&parcel=123` open a view directly. Base map tiles © OpenStreetMap contributors.
+
 ## Data
 
 The database schema is created by the backend's migrations; the pipeline fills it with OpenStreetMap data for Kathmandu Metropolitan City and synthetic parcels, owners and history.

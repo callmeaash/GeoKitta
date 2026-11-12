@@ -9,15 +9,18 @@ from app.spatial.projection import polygons_from_geojson
 TABLE = "parcel_quadkeys"
 COLUMNS = ("parcel_id", "quadkey", "min_x", "min_y", "max_x", "max_y")
 
-# ancestors of the covering quadrants by equality, the quadrants themselves (and descendants) by prefix range
+# Ancestors of the covering quadrants (exact key) and the quadrants with their descendants (prefix range).
+# Both are B-tree range conditions: an equality join on many keys lets PostgreSQL choose a hash join over the
+# whole table, which would skip the index. i points back to the key, and from it to the boxes that asked for it.
 _SEARCH_SQL = """
-SELECT parcel_id, min_x, min_y, max_x, max_y FROM {table} WHERE quadkey = ANY(CAST(:exact AS text[]))
+SELECT 0, r.i, q.parcel_id, q.min_x, q.min_y, q.max_x, q.max_y
+FROM unnest(CAST(:exact AS text[])) WITH ORDINALITY AS r(key, i)
+JOIN {table} q ON q.quadkey >= r.key AND q.quadkey <= r.key
 UNION ALL
-SELECT q.parcel_id, q.min_x, q.min_y, q.max_x, q.max_y
-FROM unnest(CAST(:lo AS text[]), CAST(:hi AS text[])) AS r(lo, hi)
+SELECT 1, r.i, q.parcel_id, q.min_x, q.min_y, q.max_x, q.max_y
+FROM unnest(CAST(:lo AS text[]), CAST(:hi AS text[])) WITH ORDINALITY AS r(lo, hi, i)
 JOIN {table} q ON q.quadkey >= r.lo AND q.quadkey < r.hi
 """
-
 
 def entries(parcel_id: int, polygon: Polygon) -> list[tuple]:
     """Index rows for one parcel: its box under each quadrant it is stored in."""
@@ -60,15 +63,27 @@ class QuadtreeIndex:
 
     def candidates(self, box: Box) -> dict[int, Box]:
         """Parcels whose bounding box touches the search box."""
-        cells = qk.cover(box)
-        exact = sorted({a for c in cells for a in qk.ancestors(c)})
-        rows = self.db.execute(self.sql, {"exact": exact, "lo": cells, "hi": [qk.key_range(c)[1] for c in cells]})
+        return self.candidates_many([box])
+
+    def candidates_many(self, boxes: list[Box]) -> dict[int, Box]:
+        """Parcels whose bounding box touches any of the search boxes, in one query."""
+        exact: dict[str, list[int]] = {}  # key -> search boxes that need it; neighbouring boxes share keys
+        ranges: dict[str, list[int]] = {}
+        for i, box in enumerate(boxes):
+            cover = qk.cover(box)
+            for c in cover:
+                ranges.setdefault(c, []).append(i)
+            for a in {a for c in cover for a in qk.ancestors(c)}:
+                exact.setdefault(a, []).append(i)
+        asked = (list(exact.values()), list(ranges.values()))
+        rows = self.db.execute(self.sql, {"exact": list(exact), "lo": list(ranges),
+                                          "hi": [qk.key_range(c)[1] for c in ranges]})
         found, read = {}, 0
-        for pid, *b in rows:
+        for part, i, pid, *b in rows:
             read += 1
-            if pid not in found and boxes_touch(tuple(b), box):
+            if pid not in found and any(boxes_touch(tuple(b), boxes[j]) for j in asked[part][i - 1]):
                 found[pid] = tuple(b)
-        self.stats = {"cells": len(cells), "rows_read": read, "candidates": len(found)}
+        self.stats = {"cells": len(ranges), "rows_read": read, "candidates": len(found)}
         return found
 
     def polygons(self, ids) -> dict[int, Polygon]:

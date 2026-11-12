@@ -2,7 +2,10 @@
 import json
 
 import numpy as np
+import shapely
 from pyproj import Transformer
+from shapely.geometry import LineString, mapping
+from shapely.geometry import Point as ShapelyPoint
 
 from app.spatial.geometry import Point, Polygon
 
@@ -46,3 +49,14 @@ def polygons_from_geojson(texts: list[str]) -> list[Polygon]:
         polygons.append(out_rings[j:j + c])
         j += c
     return polygons
+
+
+def zone_geojson(lines: list[tuple[list[Point], float]]) -> dict | None:
+    """Outline of the area within each line's distance, in lon/lat, for drawing only (lookups never use it)."""
+    shapes = [ShapelyPoint(line[0]).buffer(d, 32) if len(line) == 1 else LineString(line).buffer(d, 8)
+              for line, d in lines if d > 0 and line]
+    if not shapes:
+        return None
+    zone = shapely.union_all(shapes).simplify(0.3)
+    zone = shapely.transform(zone, lambda xy: np.column_stack(_TO_WGS.transform(xy[:, 0], xy[:, 1])))
+    return mapping(shapely.set_precision(zone, 1e-7))

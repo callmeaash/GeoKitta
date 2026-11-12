@@ -1,9 +1,25 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
+from app.api import public
 from app.config import settings
 
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    try:
+        public.features()  # load roads and rivers once at startup, not on the first click
+    except Exception:  # noqa: BLE001 - the API still starts without a database; requests will report it
+        pass
+    yield
+
+
 app = FastAPI(
+    lifespan=lifespan,
     title="GeoKitta API",
     description="Cadastral information system for Kathmandu. Demonstration with synthetic data.",
     version="0.1.0",
@@ -16,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(GZipMiddleware, minimum_size=1000)  # parcel outlines compress well
+
+app.include_router(public.router)
 
 
 @app.get("/api/health", tags=["system"])

@@ -30,7 +30,10 @@ class BruteForceIndex:
         return len(self._boxes)
 
     def candidates(self, box: Box) -> dict[int, Box]:
-        found = {pid: b for pid, b in self._boxes if boxes_touch(b, box)}
+        return self.candidates_many([box])
+
+    def candidates_many(self, boxes: list[Box]) -> dict[int, Box]:
+        found = {pid: b for pid, b in self._boxes if any(boxes_touch(b, box) for box in boxes)}
         self.stats = {"cells": 0, "rows_read": len(self._boxes), "candidates": len(found)}
         return found
 

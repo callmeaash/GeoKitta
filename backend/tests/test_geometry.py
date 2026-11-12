@@ -90,3 +90,26 @@ def test_line_distance():
     assert line_distance(SQUARE, road) == pytest.approx(5)
     assert line_distance(SQUARE, [(-5, 5), (15, 5)]) == 0  # runs across without a vertex inside
     assert line_distance(SQUARE, [(2, 2), (3, 3)]) == 0  # entirely inside
+
+
+def test_within_distance_agrees_with_line_distance():
+    import random
+    from app.spatial.geometry import within_distance
+    rng = random.Random(5)
+    shapes = [SQUARE, U_SHAPE, WITH_HOLE]
+    for _ in range(400):
+        poly = rng.choice(shapes)
+        line = [(rng.uniform(-15, 25), rng.uniform(-15, 25)) for _ in range(rng.randint(1, 4))]
+        d = rng.uniform(0, 6)
+        assert within_distance(poly, line, d) == (line_distance(poly, line) <= d), (line, d)
+
+
+def test_area_and_chunks():
+    from app.spatial.geometry import chunk_line, polygon_area
+    assert polygon_area(SQUARE) == pytest.approx(100)
+    assert polygon_area(WITH_HOLE) == pytest.approx(84)
+    assert polygon_area(U_SHAPE) == pytest.approx(88)  # 100 minus the 2 x 6 notch
+    line = [(0, 0), (60, 0), (120, 0), (180, 0), (200, 0)]
+    chunks = chunk_line(line, 100)
+    assert chunks[0][-1] == chunks[1][0]  # pieces join up
+    assert [p for c in chunks for p in c[1:]] == line[1:]

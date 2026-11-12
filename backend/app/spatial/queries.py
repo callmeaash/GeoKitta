@@ -1,15 +1,17 @@
-"""Spatial lookups: identify a parcel at a point, select by rectangle, find parcels near a line (UTM metres)."""
+"""Spatial lookups: identify a parcel at a point, select by rectangle, find parcels near points and lines (UTM)."""
 import math
 from typing import Protocol
 
-from app.spatial.geometry import (BOUNDARY, INSIDE, Box, Point, Polygon, boundary_distance, line_distance, locate,
-                                  polygon_intersects_box)
+from app.spatial.geometry import (BOUNDARY, INSIDE, Box, Point, Polygon, box_of, boundary_distance, boxes_touch,
+                                  chunk_line, expand, locate, polygon_intersects_box, within_distance)
 
 
 class Index(Protocol):
     stats: dict
 
     def candidates(self, box: Box) -> dict[int, Box]: ...
+
+    def candidates_many(self, boxes: list[Box]) -> dict[int, Box]: ...
 
     def polygons(self, ids) -> dict[int, Polygon]: ...
 
@@ -44,14 +46,24 @@ def in_box(index: Index, box: Box) -> list[int]:
     return found
 
 
+def near(index: Index, lines: list[tuple[list[Point], float]], chunk_m: float = 100.0) -> list[int]:
+    """Parcels within each line's distance; a point is a one-point line. Long lines are searched piece by piece."""
+    pieces = []
+    for line, distance in lines:
+        for part in chunk_line(line, chunk_m):
+            pieces.append((part, distance, expand(box_of(part), distance)))
+    if not pieces:
+        return []
+    boxes = index.candidates_many([p[2] for p in pieces])
+    found = []
+    for pid, poly in index.polygons(boxes).items():
+        pbox = boxes[pid]
+        if any(boxes_touch(box, pbox) and within_distance(poly, part, d) for part, d, box in pieces):
+            found.append(pid)
+    index.stats["checked"] = len(boxes)
+    return sorted(found)
+
+
 def near_line(index: Index, line: list[Point], distance: float) -> list[int]:
     """Parcels within `distance` metres of a polyline (road or river centre line, setback search)."""
-    boxes, totals = {}, {"cells": 0, "rows_read": 0}
-    for a, b in zip(line, line[1:]):  # one box per segment, so a long diagonal road does not pull in a whole block
-        seg_box = (min(a[0], b[0]) - distance, min(a[1], b[1]) - distance,
-                   max(a[0], b[0]) + distance, max(a[1], b[1]) + distance)
-        boxes.update(index.candidates(seg_box))
-        totals = {k: totals[k] + index.stats[k] for k in totals}
-    found = sorted(pid for pid, poly in index.polygons(boxes).items() if line_distance(poly, line) <= distance)
-    index.stats = {**totals, "candidates": len(boxes), "checked": len(boxes)}
-    return found
+    return near(index, [(line, distance)])
