@@ -31,9 +31,8 @@ npm-debug.log*
 !.env.example
 
 # ---------- Data (downloaded and generated) ----------
-data/cache/
-data/generated/
-data/explore/
+/data/*
+!/data/.gitkeep
 *.osm.pbf
 
 # ---------- Editors and OS ----------

@@ -1,0 +1,6 @@
+﻿-r ../backend/requirements.txt
+
+# OpenStreetMap download and geometry processing
+osmnx>=2.0
+geopandas>=1.0
+python-dotenv>=1.0
