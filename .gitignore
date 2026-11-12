@@ -1,9 +1,9 @@
 # ---------- Local project files (not committed) ----------
-CLAUDE.md
-GeoKitta_Project_Plan.md
-GeoKitta_Sample_Map_Viewer.html
-brand/
-uiux/
+/CLAUDE.md
+/GeoKitta_Project_Plan.md
+/GeoKitta_Sample_Map_Viewer.html
+/brand/
+/uiux/
 
 # ---------- Python ----------
 .venv/
