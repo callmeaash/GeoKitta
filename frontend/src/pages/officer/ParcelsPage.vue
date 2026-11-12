@@ -44,9 +44,9 @@ watch(q, () => {
   <main class="page">
     <div class="page-head">
       <div>
-        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" />Parcels</div>
-        <h1 class="page-title">Parcels</h1>
-        <p class="page-sub">Find a registered parcel to update its boundary, split it or correct its details.</p>
+        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" />Update parcel</div>
+        <h1 class="page-title">Update parcel</h1>
+        <p class="page-sub">Find the registered parcel, open its record, then update the boundary, split it (kitta kaat) or correct its details.</p>
       </div>
       <div class="head-actions">
         <RouterLink class="btn btn-secondary" to="/"><Icon name="map" :size="16" />Pick on the map</RouterLink>

@@ -108,7 +108,7 @@ async function save(accept = false) {
       <div>
         <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" /><RouterLink to="/officer/parcels">Parcels</RouterLink><Icon name="chevronRight" :size="12" />Register parcel</div>
         <h1 class="page-title">Register parcel</h1>
-        <p class="page-sub">For land not yet in the register. To change an existing parcel, find it under <RouterLink class="link" to="/officer/parcels">Parcels</RouterLink>.
+        <p class="page-sub">For land not yet in the register. To change an existing parcel, use <RouterLink class="link" to="/officer/parcels">Update parcel</RouterLink>.
           The boundary comes from surveyed corners and is validated before it can be saved.</p>
       </div>
     </div>
