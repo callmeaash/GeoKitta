@@ -35,7 +35,7 @@ const setbackText = s => `${fmt(s.distance_m)} m from the ${measuredFrom(s.measu
       <h2 class="title">Kitta No. {{ store.details.kitta }}</h2>
       <p class="subtitle">Ward {{ store.details.ward }} · {{ store.details.municipality }}</p>
       <dl class="kv">
-        <dt>PIN</dt><dd>{{ store.details.pin }}</dd>
+        <dt>PIN</dt><dd class="nowrap">{{ store.details.pin }}</dd>
         <dt>Map sheet</dt><dd>{{ store.details.map_sheet }}</dd>
         <dt>Parcel type</dt><dd>{{ label(store.details.parcel_type) }}</dd>
         <dt>Land use</dt><dd>{{ label(store.details.land_use) }}</dd>
@@ -78,11 +78,11 @@ const setbackText = s => `${fmt(s.distance_m)} m from the ${measuredFrom(s.measu
           </button>
           <button class="btn btn-secondary" @click="nearby"><Icon name="buffer" :size="16" /> Nearby</button>
         </div>
-        <div v-if="auth.officer" class="row">
+        <div v-if="auth.officer" class="officer-actions">
           <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${store.details.id}/boundary`">
             <Icon name="edit" :size="16" /> Update boundary</RouterLink>
           <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${store.details.id}/split`">
-            <Icon name="split" :size="16" /> Split</RouterLink>
+            <Icon name="split" :size="16" /> Split parcel (kitta kaat)</RouterLink>
         </div>
       </div>
       <StatsNote :stats="store.identifyStats" />

@@ -79,3 +79,10 @@
   font: 500 12px var(--font-sans); box-shadow: var(--shadow-float);
 }
 .leaflet-tooltip.pin-label::before { border-top-color: var(--color-heading); }
+
+/* Room for a classic (non-overlay) scrollbar, as on Windows, without squeezing the 296 px design */
+@media (min-width: 761px) {
+  .panel { width: 312px; scrollbar-gutter: stable; overflow-x: hidden; }
+}
+.kv dd.nowrap { white-space: nowrap; }
+.actions .officer-actions { display: flex; flex-direction: column; gap: 8px; }
