@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.api import auth, officer, public
+from app.api import auth, officer, parcels, public
 from app.config import settings
 
 
@@ -39,6 +39,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)  # parcel outlines compres
 app.include_router(public.router)
 app.include_router(auth.router)
 app.include_router(officer.router)
+app.include_router(parcels.router)
 
 
 @app.get("/api/health", tags=["system"])

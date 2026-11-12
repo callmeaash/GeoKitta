@@ -9,6 +9,7 @@ const router = useRouter()
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'grid', to: '/officer' },
   { id: 'map', label: 'Map', icon: 'map', to: '/' },
+  { id: 'new-parcel', label: 'Register parcel', icon: 'plus', to: '/officer/parcels/new' },
   { id: 'owners', label: 'Owners', icon: 'users', to: '/officer/owners' },
   { id: 'new-owner', label: 'Register owner', icon: 'userPlus', to: '/officer/owners/new' }
 ]

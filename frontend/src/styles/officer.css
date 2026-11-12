@@ -259,3 +259,13 @@ details.sec .sec-body { padding: 0 14px 14px; }
 
 /* GeoKitta additions */
 .tbl td.num, .tbl td .status { white-space: nowrap; }
+.modal-icon.red { background: var(--color-error-bg); color: var(--color-error); }
+.sw-childC { border: 2px solid #7C3AED; background: rgba(124, 58, 237, .2); }
+.field input:not([type]), .field input[type="number"], .field input[type="date"] {
+  height: 38px; width: 100%; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 0 12px; background: #fff; color: var(--color-heading);
+}
+.field input:not([type]):focus, .field input[type="number"]:focus, .field input[type="date"]:focus {
+  outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(15, 118, 110, .15);
+}
+.field input:not([type])[readonly] { background: var(--color-bg); }

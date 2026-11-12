@@ -118,6 +118,10 @@ def main(argv=None) -> int:
     if subprocess.run([sys.executable, "-m", "app.spatial.reindex"], cwd=backend).returncode != 0:
         log.error("quadtree build failed; run it again with: cd backend; python -m app.spatial.reindex")
         return 1
+    log.info("validating every parcel (overlaps, slivers, area mismatches) into parcel_issues")
+    if subprocess.run([sys.executable, "-m", "app.scan"], cwd=backend).returncode != 0:
+        log.error("validation scan failed; run it again with: cd backend; python -m app.scan")
+        return 1
     log.info("done (%.0f s)", time.perf_counter() - t0)
     return 0
 

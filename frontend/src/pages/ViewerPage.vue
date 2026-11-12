@@ -2,7 +2,7 @@
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { auth, loadOfficer } from '../auth.js'
-import { setTab, store } from '../store.js'
+import { setTab, store, toast } from '../store.js'
 import Icon from '../components/Icon.vue'
 import MapView from '../components/MapView.vue'
 import SearchBox from '../components/SearchBox.vue'
@@ -20,6 +20,7 @@ const route = useRoute()
 onMounted(() => {
   loadOfficer()
   if (PANELS[route.query.tab]) setTab(route.query.tab) // e.g. /?tab=buffer from the dashboard
+  if (typeof route.query.saved === 'string') toast(route.query.saved) // message after an officer saved a change
 })
 </script>
 

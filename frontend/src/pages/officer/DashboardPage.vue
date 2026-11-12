@@ -11,10 +11,14 @@ const nf = new Intl.NumberFormat('en-US')
 const today = new Date().toISOString().slice(0, 10)
 const firstName = computed(() => auth.officer?.full_name.split(' ')[0] || '')
 
-const ACTIONS = { login: 'Signed in', owner_registered: 'Registered owner', pipeline_import: 'Imported demo data' }
+const ACTIONS = {
+  login: 'Signed in', owner_registered: 'Registered owner', pipeline_import: 'Imported demo data',
+  parcel_registered: 'Registered parcel', boundary_updated: 'Updated boundary', parcel_split: 'Split parcel'
+}
 const actionText = a => {
   const base = ACTIONS[a.action] || label(a.action)
-  return a.details?.name ? `${base}: ${a.details.name}${a.details.lin ? ` (${a.details.lin})` : ''}` : base
+  if (a.details?.name) return `${base}: ${a.details.name}${a.details.lin ? ` (${a.details.lin})` : ''}`
+  return a.details?.pin ? `${base} ${a.details.pin}${a.details.case_id ? ` · case ${a.details.case_id}` : ''}` : base
 }
 const when = iso => new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
 
@@ -37,7 +41,7 @@ onMounted(async () => {
       </div>
       <div class="head-actions">
         <RouterLink class="btn btn-secondary" to="/"><Icon name="map" :size="16" />Open map</RouterLink>
-        <RouterLink class="btn btn-primary" to="/officer/owners/new"><Icon name="userPlus" :size="16" />Register owner</RouterLink>
+        <RouterLink class="btn btn-primary" to="/officer/parcels/new"><Icon name="plus" :size="16" />Register parcel</RouterLink>
       </div>
     </div>
 
@@ -55,9 +59,9 @@ onMounted(async () => {
     </div>
 
     <div class="quick">
-      <RouterLink to="/officer/owners"><span class="qi"><Icon name="search" /></span><span>Find owner<small>Tolerates spelling variants</small></span></RouterLink>
+      <RouterLink to="/officer/parcels/new"><span class="qi"><Icon name="plus" /></span><span>Register parcel<small>From survey coordinates</small></span></RouterLink>
       <RouterLink to="/officer/owners/new"><span class="qi"><Icon name="userPlus" /></span><span>Register owner<small>With duplicate check</small></span></RouterLink>
-      <RouterLink to="/"><span class="qi"><Icon name="map" /></span><span>Parcel map<small>Owners shown when signed in</small></span></RouterLink>
+      <RouterLink to="/"><span class="qi"><Icon name="split" /></span><span>Update or split<small>Pick the parcel on the map</small></span></RouterLink>
       <RouterLink to="/?tab=buffer"><span class="qi"><Icon name="buffer" /></span><span>Setback search<small>Roads and rivers</small></span></RouterLink>
     </div>
 

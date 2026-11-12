@@ -170,3 +170,95 @@ def within_distance(polygon: Polygon, line: list[Point], d: float) -> bool:
                 return True
     # no boundary edge is within d, so the line is either wholly inside the polygon or farther than d
     return locate(line[0], polygon) == INSIDE
+
+
+# ---------- Validation checks (registration, boundary update, split, city-wide scan) ----------
+
+TOUCH_EPS = 0.01  # metres; closer than this counts as touching a boundary, not crossing it
+
+
+def ring_problem(ring: Ring) -> str | None:
+    """Why a closed ring is not a valid polygon boundary (exact tests, like OGC validity), or None."""
+    if len(ring) < 4 or ring[0] != ring[-1]:
+        return "the ring needs at least 3 corners and must be closed"
+    if any(a == b for a, b in edges(ring)):
+        return "two consecutive corners are the same point"
+    pts = ring[:-1]
+    if len(set(pts)) < len(pts):
+        return "a corner is repeated"
+    segs = list(edges(ring))
+    n = len(segs)
+    for i in range(n):  # at each corner v the boundary must not turn straight back along itself
+        before, v, after = segs[i - 1][0], segs[i][0], segs[i][1]
+        same_way = (before[0] - v[0]) * (after[0] - v[0]) + (before[1] - v[1]) * (after[1] - v[1]) > 0
+        if cross(v, before, after) == 0 and same_way:
+            return f"the boundary folds back on itself at corner {i + 1}"
+    for i in range(n):  # edges that are not neighbours must not touch at all
+        for j in range(i + 2, n):
+            if not (i == 0 and j == n - 1) and segments_intersect(*segs[i], *segs[j]):
+                return f"edges {i + 1} and {j + 1} cross each other"
+    if ring_area(ring) < 1e-6:
+        return "the ring encloses no area"
+    return None
+
+
+def perimeter(polygon: Polygon) -> float:
+    return sum(math.hypot(b[0] - a[0], b[1] - a[1]) for ring in polygon for a, b in edges(ring))
+
+
+def strictly_inside(p: Point, polygon: Polygon, eps: float = TOUCH_EPS) -> bool:
+    """Inside the polygon and farther than eps from its boundary."""
+    if not point_in_ring(p, polygon[0]) or any(point_in_ring(p, h) for h in polygon[1:]):
+        return False
+    return boundary_distance(p, polygon) > eps
+
+
+def _crosses_properly(p: Point, q: Point, r: Point, s: Point, eps: float) -> bool:
+    """Segments cross at a point inside both, away from every end (not just touching at a corner)."""
+    d1, d2, d3, d4 = cross(r, s, p), cross(r, s, q), cross(p, q, r), cross(p, q, s)
+    if not ((d1 > 0 > d2 or d1 < 0 < d2) and (d3 > 0 > d4 or d3 < 0 < d4)):
+        return False
+    t = d1 / (d1 - d2)
+    x, y = p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])
+    return all(math.hypot(x - e[0], y - e[1]) > eps for e in (p, q, r, s)) and \
+        min(point_segment_distance(e, *seg) for e, seg in ((p, (r, s)), (q, (r, s)), (r, (p, q)), (s, (p, q)))) > eps
+
+
+def interiors_overlap(a: Polygon, b: Polygon, eps: float = TOUCH_EPS) -> bool:
+    """True if two parcels share area; neighbours that only share a boundary line are not overlapping."""
+    ba, bb = box_of(a[0]), box_of(b[0])
+    common = (max(ba[0], bb[0]) - eps, max(ba[1], bb[1]) - eps, min(ba[2], bb[2]) + eps, min(ba[3], bb[3]) + eps)
+    if common[2] - common[0] <= 3 * eps or common[3] - common[1] <= 3 * eps:
+        return False  # boxes only touch
+    near = [p for ring in a for p in ring[:-1] if boxes_touch((p[0], p[1], p[0], p[1]), common)]
+    if any(strictly_inside(p, b, eps) for p in near):
+        return True  # a corner of a lies inside b
+    near_b = [p for ring in b for p in ring[:-1] if boxes_touch((p[0], p[1], p[0], p[1]), common)]
+    if any(strictly_inside(p, a, eps) for p in near_b):
+        return True
+    ea = [e for ring in a for e in edges(ring) if boxes_touch(box_of(e), common)]
+    eb = [e for ring in b for e in edges(ring) if boxes_touch(box_of(e), common)]
+    if any(_crosses_properly(p, q, r, s, eps) for p, q in ea for r, s in eb):
+        return True  # edges cross with no corner inside: the plus-sign case
+    # boundaries may coincide while both shapes lie on the same side (e.g. a copy): test just inside each edge of a
+    ring = a[0]
+    turn = 1 if sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in edges(ring)) > 0 else -1  # +1 counter-clockwise
+    for p, q in ea:
+        length = math.hypot(q[0] - p[0], q[1] - p[1])
+        if length < 10 * eps:
+            continue
+        nx, ny = -(q[1] - p[1]) / length * turn, (q[0] - p[0]) / length * turn  # unit normal into a
+        mid = ((p[0] + q[0]) / 2 + nx * 5 * eps, (p[1] + q[1]) / 2 + ny * 5 * eps)
+        if strictly_inside(mid, a, eps) and strictly_inside(mid, b, eps):
+            return True
+    return False
+
+
+def within_polygon(inner: Polygon, outer: Polygon, eps: float = TOUCH_EPS) -> bool:
+    """True if inner lies inside outer (touching its boundary is allowed), e.g. a child inside its parent."""
+    pts = [p for ring in inner for p in ring[:-1]]
+    pts += [((p[0] + q[0]) / 2, (p[1] + q[1]) / 2) for ring in inner for p, q in edges(ring)]  # for concave parents
+    if any(locate(p, outer) == OUTSIDE and boundary_distance(p, outer) > eps for p in pts):
+        return False
+    return not any(_crosses_properly(p, q, r, s, eps) for ring in inner for p, q in edges(ring)
+                   for oring in outer for r, s in edges(oring))
