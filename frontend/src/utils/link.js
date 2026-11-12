@@ -21,5 +21,6 @@ export function makeLink({ zoom, lat, lng, parcel }) {
 
 /** Update the address bar without adding a history entry. */
 export function writeLink(state) {
-  window.history.replaceState(null, '', makeLink(state))
+  const url = window.location.pathname + window.location.search + makeLink(state)
+  window.history.replaceState(window.history.state, '', url) // keep the router's own state
 }

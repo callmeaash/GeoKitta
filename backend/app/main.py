@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.api import public
+from app.api import auth, officer, public
 from app.config import settings
 
 
@@ -14,6 +14,7 @@ async def lifespan(_app: FastAPI):
     try:
         public.features()  # load roads, rivers and place names once at startup, not on the first click
         public.gazetteer()
+        officer.owners_index()  # about 4 s for 176k owners
     except Exception:  # noqa: BLE001 - the API still starts without a database; requests will report it
         pass
     yield
@@ -36,6 +37,8 @@ app.add_middleware(
 app.add_middleware(GZipMiddleware, minimum_size=1000)  # parcel outlines compress well
 
 app.include_router(public.router)
+app.include_router(auth.router)
+app.include_router(officer.router)
 
 
 @app.get("/api/health", tags=["system"])

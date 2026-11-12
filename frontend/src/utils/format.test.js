@@ -18,3 +18,12 @@ describe('format', () => {
     expect(toCsv([['a', 'b,c'], [1, 'say "hi"']])).toBe('a,"b,c"\n1,"say ""hi"""')
   })
 })
+
+describe('deed labels', async () => {
+  const { txnLabel, districtName } = await import('./format.js')
+  it('explains Nepali deed types', () => {
+    expect(txnLabel('rajinama')).toBe('Rajinama (sale)')
+    expect(txnLabel('something_new')).toBe('Something new')
+    expect(districtName(27)).toBe('Kathmandu')
+  })
+})

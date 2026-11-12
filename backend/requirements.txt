@@ -3,6 +3,10 @@ fastapi>=0.115
 uvicorn[standard]>=0.32
 pydantic-settings>=2.6
 
+# Officer login
+argon2-cffi>=23.1
+PyJWT>=2.9
+
 # Database
 sqlalchemy>=2.0
 geoalchemy2>=0.16

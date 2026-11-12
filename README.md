@@ -32,7 +32,7 @@ Requirements: Python 3.13, Node.js 24, PostgreSQL 18 with PostGIS.
 
 ```
 # 1. Environment
-copy .env.example .env          # then set your PostgreSQL password in .env
+copy .env.example .env          # then set your PostgreSQL password and a JWT_SECRET in .env
 
 # 2. Backend
 py -3.13 -m venv .venv
@@ -56,6 +56,21 @@ npm run dev
 ```
 
 The public map viewer opens at http://localhost:5173. Zoom in to see parcel outlines, or click anywhere to identify a parcel. The tools are Details, Select (rectangle or line), Buffer (point, line, or road/river with its setback rule), Measure and Layers. Links such as `#map=18/27.70660/85.31120&parcel=123` open a view directly. Base map tiles © OpenStreetMap contributors.
+
+The search box finds places by name even when misspelled ("baluwatr" → Baluwatar), and parcels by PIN, kitta number or ward/kitta (`4/123`).
+
+## Officer accounts
+
+Officers sign in at http://localhost:5173/officer/login. Accounts are created from the command line, never through the web:
+
+```
+cd backend
+..\.venv\Scripts\python -m app.cli create-officer sita.maharjan --name "Sita Maharjan" --admin
+..\.venv\Scripts\python -m app.cli set-password sita.maharjan
+..\.venv\Scripts\python -m app.cli disable-officer sita.maharjan
+```
+
+Passwords are stored as argon2 hashes. A signed-in officer gets an HttpOnly session cookie (8 hours). Signed in, the map shows each parcel's owners, shares and ownership history. The workspace has a dashboard, owner search (tolerant of spelling variants such as Shreshtha/Shrestha and Lakshmi/Laxmi), and owner registration with a duplicate check.
 
 ## Data
 

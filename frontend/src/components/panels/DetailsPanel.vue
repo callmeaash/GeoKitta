@@ -2,7 +2,9 @@
 import { selectParcel, setTab, startDraw, store } from '../../store.js'
 import { fmt, label, measuredFrom, sourceLabel } from '../../utils/format.js'
 import { toRopani } from '../../utils/area.js'
+import { auth } from '../../auth.js'
 import Icon from '../Icon.vue'
+import OwnershipCard from '../OwnershipCard.vue'
 import StatsNote from '../StatsNote.vue'
 
 function nearby() {
@@ -60,7 +62,8 @@ const setbackText = s => `${fmt(s.distance_m)} m from the ${measuredFrom(s.measu
         <Icon name="checkCircle" :size="16" />
         <div><strong>Outside road and river setbacks</strong><span>Checked against the current setback rules.</span></div>
       </div>
-      <div class="card card-neutral">
+      <OwnershipCard v-if="auth.officer" :parcel-id="store.details.id" />
+      <div v-else class="card card-neutral">
         <Icon name="lock" :size="16" />
         <div><strong>Owner information is restricted</strong><span>Available to authorised officers only.</span></div>
       </div>

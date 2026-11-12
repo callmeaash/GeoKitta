@@ -47,7 +47,8 @@
   .app { grid-template-rows: 56px 24px 1fr; }
   .topbar { gap: 10px; padding: 0 10px; }
   .brand { min-width: 0; }
-  .brand-name, .brand-sub, .top-actions { display: none; }
+  .brand-name, .brand-sub, .top-actions .label-text { display: none; }
+  .top-actions .btn { padding: 0 10px; }
   .strip { height: 24px; font-size: 11px; }
   .main { position: relative; flex-direction: column; }
   .map { order: 1; }
