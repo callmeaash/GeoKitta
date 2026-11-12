@@ -79,6 +79,8 @@ const setbackText = s => `${fmt(s.distance_m)} m from the ${measuredFrom(s.measu
           <button class="btn btn-secondary" @click="nearby"><Icon name="buffer" :size="16" /> Nearby</button>
         </div>
         <div v-if="auth.officer" class="officer-actions">
+          <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${store.details.id}`">
+            <Icon name="file" :size="16" /> Open parcel record</RouterLink>
           <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${store.details.id}/boundary`">
             <Icon name="edit" :size="16" /> Update boundary</RouterLink>
           <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${store.details.id}/split`">

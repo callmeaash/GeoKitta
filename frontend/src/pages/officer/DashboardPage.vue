@@ -13,7 +13,8 @@ const firstName = computed(() => auth.officer?.full_name.split(' ')[0] || '')
 
 const ACTIONS = {
   login: 'Signed in', owner_registered: 'Registered owner', pipeline_import: 'Imported demo data',
-  parcel_registered: 'Registered parcel', boundary_updated: 'Updated boundary', parcel_split: 'Split parcel'
+  parcel_registered: 'Registered parcel', boundary_updated: 'Updated boundary', parcel_split: 'Split parcel',
+  details_updated: 'Corrected details of'
 }
 const actionText = a => {
   const base = ACTIONS[a.action] || label(a.action)
@@ -41,6 +42,7 @@ onMounted(async () => {
       </div>
       <div class="head-actions">
         <RouterLink class="btn btn-secondary" to="/"><Icon name="map" :size="16" />Open map</RouterLink>
+        <RouterLink class="btn btn-secondary" to="/officer/parcels"><Icon name="search" :size="16" />Find parcel</RouterLink>
         <RouterLink class="btn btn-primary" to="/officer/parcels/new"><Icon name="plus" :size="16" />Register parcel</RouterLink>
       </div>
     </div>
@@ -61,7 +63,7 @@ onMounted(async () => {
     <div class="quick">
       <RouterLink to="/officer/parcels/new"><span class="qi"><Icon name="plus" /></span><span>Register parcel<small>From survey coordinates</small></span></RouterLink>
       <RouterLink to="/officer/owners/new"><span class="qi"><Icon name="userPlus" /></span><span>Register owner<small>With duplicate check</small></span></RouterLink>
-      <RouterLink to="/"><span class="qi"><Icon name="split" /></span><span>Update or split<small>Pick the parcel on the map</small></span></RouterLink>
+      <RouterLink to="/officer/parcels"><span class="qi"><Icon name="edit" /></span><span>Update parcel<small>Boundary, split or details</small></span></RouterLink>
       <RouterLink to="/?tab=buffer"><span class="qi"><Icon name="buffer" /></span><span>Setback search<small>Roads and rivers</small></span></RouterLink>
     </div>
 

@@ -81,7 +81,7 @@ async function save(accept = false) {
     })
     const data = await res.json()
     if (res.ok) {
-      router.push({ path: '/', hash: `#parcel=${id}`, query: { saved: `Boundary of ${data.pin} updated, case ${data.case_id}` } })
+      router.push({ path: `/officer/parcels/${id}`, query: { saved: `Boundary of ${data.pin} updated, case ${data.case_id}. The old boundary is kept in history.` } })
     } else if (res.status === 409 && data.report) {
       check.value = { ...check.value, report: data.report }
       confirmOverlap.value = true
@@ -98,8 +98,8 @@ async function save(accept = false) {
   <main class="page">
     <div class="page-head">
       <div>
-        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" />Parcels<Icon name="chevronRight" :size="12" />
-          Kitta {{ parcel?.kitta || '…' }}<Icon name="chevronRight" :size="12" />Update boundary</div>
+        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" /><RouterLink to="/officer/parcels">Parcels</RouterLink><Icon name="chevronRight" :size="12" />
+          <RouterLink :to="`/officer/parcels/${id}`">Kitta {{ parcel?.kitta || '…' }}</RouterLink><Icon name="chevronRight" :size="12" />Update boundary</div>
         <h1 class="page-title">Update boundary{{ parcel ? ` — Kitta ${parcel.kitta}` : '' }}</h1>
         <p class="page-sub"><span class="tag">Boundary update</span> The old boundary is kept in the parcel's history.</p>
       </div>
@@ -158,7 +158,7 @@ async function save(accept = false) {
 
     <div v-if="parcel" class="footer-bar">
       <span class="left"><Icon name="info" :size="16" />Saving keeps the old boundary in history and updates the quadtree in the same transaction.</span>
-      <RouterLink class="btn btn-ghost" :to="{ path: '/', hash: `#parcel=${id}` }">Cancel</RouterLink>
+      <RouterLink class="btn btn-ghost" :to="`/officer/parcels/${id}`">Cancel</RouterLink>
       <button class="btn btn-primary" :disabled="saving || !check || !check.report.ok && !check.report.overlaps.length" @click="save(false)">
         <Icon name="check" :size="16" />{{ saving ? 'Saving…' : 'Save new boundary' }}</button>
     </div>

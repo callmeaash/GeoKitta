@@ -89,7 +89,7 @@ async function save(accept = false) {
     })
     const data = await res.json()
     if (res.status === 201) {
-      router.push({ path: '/', hash: `#parcel=${data.parcel_id}`, query: { saved: `Kitta ${data.kitta} registered (${data.pin}), case ${data.case_id}` } })
+      router.push({ path: `/officer/parcels/${data.parcel_id}`, query: { saved: `Kitta ${data.kitta} registered (${data.pin}), case ${data.case_id}.` } })
     } else if (res.status === 409 && data.report) {
       check.value = { ...check.value, report: data.report }
       confirmOverlap.value = true
@@ -106,9 +106,10 @@ async function save(accept = false) {
   <main class="page">
     <div class="page-head">
       <div>
-        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" />Parcels<Icon name="chevronRight" :size="12" />Register parcel</div>
+        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" /><RouterLink to="/officer/parcels">Parcels</RouterLink><Icon name="chevronRight" :size="12" />Register parcel</div>
         <h1 class="page-title">Register parcel</h1>
-        <p class="page-sub">Enter the details and the surveyed corners. The boundary is validated before it can be saved; it is never drawn by hand.</p>
+        <p class="page-sub">For land not yet in the register. To change an existing parcel, find it under <RouterLink class="link" to="/officer/parcels">Parcels</RouterLink>.
+          The boundary comes from surveyed corners and is validated before it can be saved.</p>
       </div>
     </div>
     <div v-if="errors.length" class="banner banner-error" role="alert"><Icon name="alert" :size="16" />

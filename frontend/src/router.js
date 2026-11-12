@@ -14,9 +14,11 @@ const routes = [
       { path: 'owners', component: () => import('./pages/officer/OwnersPage.vue'), meta: { nav: 'owners' } },
       { path: 'owners/new', component: () => import('./pages/officer/RegisterOwnerPage.vue'), meta: { nav: 'new-owner' } },
       { path: 'owners/:id(\\d+)', component: () => import('./pages/officer/OwnerPage.vue'), meta: { nav: 'owners' } },
+      { path: 'parcels', component: () => import('./pages/officer/ParcelsPage.vue'), meta: { nav: 'parcels' } },
       { path: 'parcels/new', component: () => import('./pages/officer/RegisterParcelPage.vue'), meta: { nav: 'new-parcel' } },
-      { path: 'parcels/:id(\\d+)/boundary', component: () => import('./pages/officer/UpdateBoundaryPage.vue'), meta: { nav: 'map' } },
-      { path: 'parcels/:id(\\d+)/split', component: () => import('./pages/officer/SplitParcelPage.vue'), meta: { nav: 'map' } }
+      { path: 'parcels/:id(\\d+)', component: () => import('./pages/officer/ParcelPage.vue'), meta: { nav: 'parcels' } },
+      { path: 'parcels/:id(\\d+)/boundary', component: () => import('./pages/officer/UpdateBoundaryPage.vue'), meta: { nav: 'parcels' } },
+      { path: 'parcels/:id(\\d+)/split', component: () => import('./pages/officer/SplitParcelPage.vue'), meta: { nav: 'parcels' } }
     ]
   },
   { path: '/:rest(.*)*', redirect: '/' }

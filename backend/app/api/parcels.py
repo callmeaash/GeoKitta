@@ -13,8 +13,8 @@ from app.auth import Officer, current_officer
 from app.db import get_session
 from app.spatial.geometry import Polygon, box_of, expand, interiors_overlap, polygon_area, within_polygon
 from app.spatial.index import QuadtreeIndex, index_parcel, load_polygons, unindex_parcel
-from app.validation import (FAIL, PASS, WARN, Check, InputError, Report, polygon_from_points, to_ewkt, to_geojson,
-                            validate)
+from app.validation import (FAIL, PASS, WARN, Check, InputError, Report, check_area, polygon_from_points, to_ewkt,
+                            to_geojson, validate)
 
 router = APIRouter(prefix="/api/officer/parcels", tags=["officer parcels"], dependencies=[Depends(current_officer)])
 
@@ -78,6 +78,15 @@ class SplitRequest(BaseModel):
     children: list[Child] = Field(min_length=2, max_length=10)
     deed_ref: str | None = Field(None, max_length=40)
     remarks: str | None = Field(None, max_length=500)
+
+
+class DetailsUpdate(BaseModel):
+    """Correction of a parcel's attributes (samsodhan); the boundary changes only through survey coordinates."""
+
+    parcel_type: str | None = Field(None, pattern="^(private|public|government|guthi)$")
+    land_use: str | None = Field(None, pattern="^(residential|commercial|agricultural|institutional|other)$")
+    registered_area: float | None = Field(None, gt=0)
+    reason: str = Field(min_length=3, max_length=200)
 
 
 # ---------- helpers ----------
@@ -172,6 +181,76 @@ def _insert_parcel(db: Session, polygon: Polygon, ward: int, sheet: str, kitta: 
            "lu": land_use, "a": round(area, 2), "g": to_ewkt(polygon), "src": source, "acc": accuracy}).scalar()
     index_parcel(db, pid, polygon)  # the linear quadtree changes in the same transaction
     return pid, pin
+
+
+# ---------- parcel record (officers see retired parcels too) ----------
+
+@router.get("/{parcel_id}")
+def parcel_record(parcel_id: int, db: Session = Depends(get_session)):
+    """Everything an officer needs before updating a parcel: details, cases, lineage and boundary history."""
+    row = db.execute(text("""
+        SELECT id, pin, parcel_no, ward_no, map_sheet_code, parcel_type, land_use, registered_area, status,
+               geometry_source, accuracy_m, created_at, updated_at, ST_AsGeoJSON(boundary, 7)
+        FROM parcels WHERE id = :id
+    """), {"id": parcel_id}).one_or_none()
+    if row is None:
+        raise HTTPException(404, "parcel not found")
+    polygon = load_polygons(db, [parcel_id])[parcel_id]
+    cases = db.execute(text("""
+        SELECT t.case_id, t.txn_type, t.status, t.deed_ref, t.deed_date, t.remarks, o.full_name
+        FROM transactions t JOIN officers o ON o.id = t.created_by
+        WHERE t.parcel_id = :id OR t.id IN (SELECT transaction_id FROM parcel_lineage WHERE child_id = :id)
+        ORDER BY t.deed_date DESC NULLS LAST, t.id DESC LIMIT 50
+    """), {"id": parcel_id}).all()
+    parents = db.execute(text("SELECT p.id, p.pin, p.parcel_no FROM parcel_lineage l "
+                              "JOIN parcels p ON p.id = l.parent_id WHERE l.child_id = :id"), {"id": parcel_id}).all()
+    children = db.execute(text("SELECT p.id, p.pin, p.parcel_no, p.status FROM parcel_lineage l "
+                               "JOIN parcels p ON p.id = l.child_id WHERE l.parent_id = :id ORDER BY p.parcel_no"),
+                          {"id": parcel_id}).all()
+    history = db.execute(text("SELECT count(*) FROM parcel_geometry_history WHERE parcel_id = :id"),
+                         {"id": parcel_id}).scalar()
+    issues = db.execute(text("SELECT issue_type, severity, details ->> 'check' FROM parcel_issues "
+                             "WHERE (parcel_id = :id OR other_parcel_id = :id) AND review_status = 'open'"),
+                        {"id": parcel_id}).all()
+    return {
+        "id": row[0], "pin": row[1], "kitta": row[2], "ward": row[3], "map_sheet": row[4], "parcel_type": row[5],
+        "land_use": row[6], "area_m2": float(row[7]), "status": row[8], "geometry_source": row[9],
+        "accuracy_m": float(row[10]) if row[10] is not None else None, "created_at": row[11], "updated_at": row[12],
+        "geometry": json.loads(row[13]), "boundary_area_m2": round(polygon_area(polygon), 2),
+        "cases": [{"case_id": c[0], "txn_type": c[1], "status": c[2], "deed_ref": c[3], "deed_date": c[4],
+                   "remarks": c[5], "officer": c[6]} for c in cases],
+        "parents": [{"id": r[0], "pin": r[1], "kitta": r[2]} for r in parents],
+        "children": [{"id": r[0], "pin": r[1], "kitta": r[2], "status": r[3]} for r in children],
+        "boundary_versions": history,
+        "open_issues": [{"type": r[0], "severity": r[1], "detail": r[2]} for r in issues],
+    }
+
+
+@router.patch("/{parcel_id}")
+def update_details(parcel_id: int, req: DetailsUpdate, db: Session = Depends(get_session),
+                   officer: Officer = Depends(current_officer)):
+    """Correct land use, parcel type or registered area; recorded as a samsodhan case with before and after."""
+    row = _active(db, parcel_id)
+    before = {"parcel_type": row[7], "land_use": row[6], "registered_area": float(row[5])}
+    after = {k: v for k, v in req.model_dump(exclude={"reason"}).items() if v is not None and v != before[k]}
+    if not after:
+        raise HTTPException(422, "nothing to change")
+    tid, case_id = _new_transaction(db, officer, "samsodhan", parcel_id, None, req.reason)
+    sets = ", ".join(f"{k} = :{k}" for k in after)
+    db.execute(text(f"UPDATE parcels SET {sets}, updated_at = now() WHERE id = :id"), {**after, "id": parcel_id})
+    warning = None
+    if "registered_area" in after:
+        area = polygon_area(load_polygons(db, [parcel_id])[parcel_id])
+        check = check_area(area, after["registered_area"])
+        if check.status == WARN:
+            warning = check.detail
+            db.execute(text("INSERT INTO parcel_issues (parcel_id, issue_type, severity, details) "
+                            "VALUES (:p, 'area_mismatch', 'warning', CAST(:d AS jsonb))"),
+                       {"p": parcel_id, "d": json.dumps({"check": check.detail, "source": "save"})})
+    _audit(db, officer, "details_updated", parcel_id, tid,
+           {"pin": row[1], "case_id": case_id, "before": {k: before[k] for k in after}, "after": after})
+    db.commit()
+    return {"parcel_id": parcel_id, "pin": row[1], "case_id": case_id, "changed": after, "warning": warning}
 
 
 # ---------- register ----------

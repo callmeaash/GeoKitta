@@ -78,8 +78,8 @@ async function save() {
     const data = await res.json()
     if (res.status === 201) {
       const kittas = data.children.map(c => c.kitta).join(', ')
-      router.push({ path: '/', hash: `#parcel=${data.children[0].parcel_id}`,
-        query: { saved: `${data.parent_pin} split into kitta ${kittas}, case ${data.case_id}` } })
+      router.push({ path: `/officer/parcels/${id}`,
+        query: { saved: `${data.parent_pin} split into kitta ${kittas}, case ${data.case_id}.` } })
     } else {
       errors.value = data.checks ? data.checks.filter(c => c.status === 'fail').map(c => c.title) : [data.detail]
     }
@@ -93,7 +93,8 @@ async function save() {
   <main class="page">
     <div class="page-head">
       <div>
-        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" />Parcels<Icon name="chevronRight" :size="12" />Split parcel</div>
+        <div class="crumbs"><RouterLink to="/officer">Dashboard</RouterLink><Icon name="chevronRight" :size="12" /><RouterLink to="/officer/parcels">Parcels</RouterLink><Icon name="chevronRight" :size="12" />
+          <RouterLink :to="`/officer/parcels/${id}`">Kitta {{ parcel?.kitta || '…' }}</RouterLink><Icon name="chevronRight" :size="12" />Split</div>
         <h1 class="page-title">Split parcel (kitta kaat){{ parcel ? ` — Kitta ${parcel.kitta}` : '' }}</h1>
         <p class="page-sub"><span class="tag">Split</span> The parent is retired and each child gets a new kitta number.</p>
       </div>
@@ -154,7 +155,7 @@ async function save() {
 
     <div v-if="parcel" class="footer-bar">
       <span class="left"><Icon name="info" :size="16" />The split is saved as one case: parent retired, children created, lineage and owners recorded.</span>
-      <RouterLink class="btn btn-ghost" :to="{ path: '/', hash: `#parcel=${id}` }">Cancel</RouterLink>
+      <RouterLink class="btn btn-ghost" :to="`/officer/parcels/${id}`">Cancel</RouterLink>
       <button class="btn btn-primary" :disabled="saving || !result?.ok" @click="save"><Icon name="check" :size="16" />{{ saving ? 'Saving…' : 'Confirm split' }}</button>
     </div>
   </main>

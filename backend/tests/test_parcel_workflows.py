@@ -177,3 +177,39 @@ def test_split_retires_the_parent_and_creates_children(client):
 def test_parcel_routes_need_login(client):
     client.cookies.clear()
     assert client.post("/api/officer/parcels/check", json={"points": [[0, 0]] * 3}).status_code == 401
+
+
+def test_parcel_record_and_details_correction(client):
+    pid = client.get("/api/parcels/at", params={"lat": 27.7066, "lng": 85.3112}).json()["parcel"]["id"]
+    rec = client.get(f"/api/officer/parcels/{pid}").json()
+    assert rec["status"] == "active" and rec["geometry"]["type"] == "Polygon"
+    new_use = "commercial" if rec["land_use"] != "commercial" else "residential"
+    r = client.patch(f"/api/officer/parcels/{pid}", json={"land_use": new_use, "reason": "Use changed on the ground"})
+    assert r.status_code == 200 and r.json()["changed"] == {"land_use": new_use} and r.json()["warning"] is None
+    rec2 = client.get(f"/api/officer/parcels/{pid}").json()
+    assert rec2["land_use"] == new_use and rec2["cases"][0]["txn_type"] == "samsodhan"
+    audit = client.conn.execute(text("SELECT details FROM audit_log WHERE parcel_id = :p "
+                                     "AND action = 'details_updated'"), {"p": pid}).scalar()
+    assert audit["before"] == {"land_use": rec["land_use"]} and audit["after"] == {"land_use": new_use}
+
+    wrong_area = round(rec["boundary_area_m2"] * 1.3, 2)  # 30% too large: saved, but flagged
+    r = client.patch(f"/api/officer/parcels/{pid}", json={"registered_area": wrong_area, "reason": "Deed area"})
+    assert r.status_code == 200 and r.json()["warning"]
+    same = {"land_use": new_use, "reason": "Same again"}
+    assert client.patch(f"/api/officer/parcels/{pid}", json=same).status_code == 422
+    assert client.patch(f"/api/officer/parcels/{pid}", json={"land_use": "airport", "reason": "Bad"}).status_code == 422
+
+
+def test_record_of_a_split_parent_lists_its_children(client):
+    a = survey_file("split_")
+    pin = a[len("split_"):-6]
+    pid = client.conn.execute(text("SELECT id FROM parcels WHERE pin = :p AND status = 'active'"), {"p": pin}).scalar()
+    if pid is None:
+        pytest.skip("sample parcel is not active")
+    kids = [{"points": read_points(f"split_{pin}_{x}.csv"), "crs": "utm"} for x in "AB"]
+    made = client.post(f"/api/officer/parcels/{pid}/split", json={"children": kids}).json()["children"]
+    parent = client.get(f"/api/officer/parcels/{pid}").json()
+    assert parent["status"] == "retired" and [c["id"] for c in parent["children"]] == [m["parcel_id"] for m in made]
+    child = client.get(f"/api/officer/parcels/{made[0]['parcel_id']}").json()
+    assert child["parents"][0]["id"] == pid and child["cases"][0]["txn_type"] == "split"
+    assert client.patch(f"/api/officer/parcels/{pid}", json={"land_use": "other", "reason": "x" * 5}).status_code == 404
