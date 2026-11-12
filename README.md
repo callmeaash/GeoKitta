@@ -74,7 +74,17 @@ cd ..
 .venv\Scripts\python -m pipeline --wards 1 --dry-run   # generate and validate only
 ```
 
-The first run clips the extract to KMC and saves a snapshot in `data\raw\`; later runs reuse it. The answer key for the planted data defects and sample survey coordinate files are written to `data\generated\`. OpenStreetMap data © OpenStreetMap contributors, ODbL.
+The first run clips the extract to KMC and saves a snapshot in `data\raw\`; later runs reuse it. After loading, the pipeline builds the linear quadtree (`parcel_quadkeys`). The answer key for the planted data defects and sample survey coordinate files are written to `data\generated\`. OpenStreetMap data © OpenStreetMap contributors, ODbL.
+
+## Linear quadtree
+
+The spatial index lives in `backend/app/spatial/`. Each parcel is stored under the 1-4 quadrants at its own size level, so a click reads about a dozen index rows instead of every parcel.
+
+```
+cd backend
+..\.venv\Scripts\python -m app.spatial.reindex    # rebuild the index for all active parcels
+..\.venv\Scripts\python -m app.spatial.evaluate   # quadtree vs brute-force loop at 200 / 10,000 / 50,000 / all parcels
+```
 
 ## Test
 

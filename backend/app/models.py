@@ -165,13 +165,13 @@ class Parcel(Base):
 
 
 class ParcelQuadkey(Base):
-    """Linear quadtree entry. Box in UTM 45N metres; collation "C" for prefix ranges."""
+    """Linear quadtree entry: 1-4 rows per parcel. Box in UTM 45N metres; collation "C" for prefix ranges."""
 
     __tablename__ = "parcel_quadkeys"
 
     parcel_id: Mapped[int] = mapped_column(ForeignKey("parcels.id", ondelete="CASCADE"), primary_key=True)
     quadkey: Mapped[str] = mapped_column(
-        String(24, collation="C"), index=True, comment="quadrant digits 0-3 from the root"
+        String(24, collation="C"), primary_key=True, index=True, comment="quadrant digits 0-3 from the root"
     )
     min_x: Mapped[float] = mapped_column(Double, comment="UTM 45N metres")
     min_y: Mapped[float] = mapped_column(Double)

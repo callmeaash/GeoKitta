@@ -2,6 +2,7 @@ import argparse
 import csv
 import json
 import logging
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
@@ -110,6 +111,14 @@ def main(argv=None) -> int:
         log.error("%s", exc)
         return 1
     log.info("loaded: %s (%.0f s)", counts, time.perf_counter() - t0)
+
+    # the backend owns the spatial index; rebuild it so lookups see the new parcels
+    log.info("building the linear quadtree")
+    backend = settings.PROJECT_DIR / "backend"
+    if subprocess.run([sys.executable, "-m", "app.spatial.reindex"], cwd=backend).returncode != 0:
+        log.error("quadtree build failed; run it again with: cd backend; python -m app.spatial.reindex")
+        return 1
+    log.info("done (%.0f s)", time.perf_counter() - t0)
     return 0
 
 
