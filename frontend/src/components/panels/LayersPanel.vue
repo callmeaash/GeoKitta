@@ -7,7 +7,8 @@ import { store } from '../../store.js'
   <div class="panel-body">
     <div class="section-title">Base map</div>
     <label class="check"><input v-model="store.layers.base" type="radio" value="light">Light (muted OpenStreetMap)</label>
-    <label class="check"><input v-model="store.layers.base" type="radio" value="osm">OpenStreetMap standard</label>
+    <label class="check"><input v-model="store.layers.base" type="radio" value="osm">Street (OpenStreetMap standard)</label>
+    <label class="check"><input v-model="store.layers.base" type="radio" value="satellite">Satellite (Esri World Imagery)</label>
 
     <div class="section-title">Overlays</div>
     <label class="check"><input v-model="store.layers.parcels" type="checkbox">Parcel outlines</label>
@@ -15,7 +16,8 @@ import { store } from '../../store.js'
     <label class="check"><input v-model="store.layers.zones" type="checkbox">Setback and buffer zones</label>
 
     <p class="note">
-      Base map © OpenStreetMap contributors. Parcels, owners and records are synthetic.
+      Street maps © OpenStreetMap contributors; imagery © Esri and its partners (non-commercial use, with
+      attribution). Parcels, owners and records are synthetic.
     </p>
   </div>
 </template>

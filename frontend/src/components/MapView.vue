@@ -29,6 +29,9 @@ let hovered = null
 /* ---------- Parcel outlines ---------- */
 
 function parcelStyle() {
+  if (store.layers.base === 'satellite') { // yellow reads best on dark rooftops (design token --map-parcel-satellite)
+    return { color: '#FDE047', weight: 1, opacity: 0.9, fill: true, fillOpacity: 0 }
+  }
   return { color: COLORS.parcel, weight: 0.8, opacity: 0.85, fill: true, fillOpacity: 0 }
 }
 
@@ -202,8 +205,17 @@ onMounted(() => {
   const osmTiles = className => L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 20, maxNativeZoom: 19, attribution: OSM, className
   })
-  bases = { light: osmTiles('tiles-light'), osm: osmTiles('') }
+  bases = {
+    light: osmTiles('tiles-light'),
+    osm: osmTiles(''),
+    // Esri World Imagery: free with attribution for non-commercial use; sharp to zoom 19 over Kathmandu
+    satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 20, maxNativeZoom: 19,
+      attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics and the GIS User Community'
+    })
+  }
   bases[store.layers.base].addTo(map)
+  el.value.classList.toggle('sat', store.layers.base === 'satellite')
   map.attributionControl.setPrefix('<a href="https://leafletjs.com">Leaflet</a>')
   L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map)
 
@@ -292,6 +304,8 @@ watch(() => store.layers.base, base => {
     if (name === base) layer.addTo(map)
     else map.removeLayer(layer)
   }
+  el.value.classList.toggle('sat', base === 'satellite') // white kitta labels on imagery
+  parcelsLayer.setStyle(parcelStyle)
 })
 watch(() => store.layers.parcels, () => loadOutlines(true))
 watch(() => store.layers.labels, drawLabels)
@@ -332,7 +346,8 @@ defineExpose({ finishDraw })
 
     <div class="basemap" role="group" aria-label="Base map">
       <button :aria-pressed="store.layers.base === 'light'" @click="store.layers.base = 'light'">Light</button>
-      <button :aria-pressed="store.layers.base === 'osm'" @click="store.layers.base = 'osm'">OpenStreetMap</button>
+      <button :aria-pressed="store.layers.base === 'osm'" @click="store.layers.base = 'osm'">Street</button>
+      <button :aria-pressed="store.layers.base === 'satellite'" @click="store.layers.base = 'satellite'">Satellite</button>
     </div>
 
     <div class="controls">
@@ -361,7 +376,7 @@ defineExpose({ finishDraw })
 
     <div class="legend">
       <h4>Legend</h4>
-      <div class="lg-row"><span class="sw sw-parcel"></span>Parcel</div>
+      <div class="lg-row"><span class="sw" :class="store.layers.base === 'satellite' ? 'sw-parcel-sat' : 'sw-parcel'"></span>Parcel</div>
       <div class="lg-row"><span class="sw sw-sel"></span>Selected / found parcel</div>
       <div class="lg-row"><span class="sw sw-setback"></span>Setback zone</div>
       <div class="lg-row"><span class="sw sw-buffer"></span>Buffer zone</div>
