@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { auth, initials, logout } from '../../auth.js'
+import BrandMark from '../../components/BrandMark.vue'
 import Icon from '../../components/Icon.vue'
 
 const route = useRoute()
@@ -26,7 +27,7 @@ async function signOut() {
   <div class="o-app">
     <aside class="sidebar" aria-label="Officer navigation">
       <RouterLink class="sb-brand" to="/officer">
-        <span class="brand-mark"><Icon name="pin" :size="18" /></span>
+        <BrandMark :size="32" />
         <span><span class="brand-name">GeoKitta</span><span class="brand-sub">Officer workspace</span></span>
       </RouterLink>
       <nav class="sb-nav">

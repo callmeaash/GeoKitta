@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { auth, loadOfficer } from '../auth.js'
 import { setTab, store, toast } from '../store.js'
+import BrandMark from '../components/BrandMark.vue'
 import Icon from '../components/Icon.vue'
 import MapView from '../components/MapView.vue'
 import SearchBox from '../components/SearchBox.vue'
@@ -28,7 +29,7 @@ onMounted(() => {
   <div class="app">
     <header class="topbar">
       <a class="brand" href="/">
-        <span class="brand-mark"><Icon name="pin" :size="20" /></span>
+        <BrandMark :size="32" />
         <span><span class="brand-name">GeoKitta</span><span class="brand-sub">Cadastral Information System</span></span>
       </a>
       <SearchBox />

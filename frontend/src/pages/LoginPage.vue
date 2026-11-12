@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { login } from '../auth.js'
+import BrandMark from '../components/BrandMark.vue'
 import Icon from '../components/Icon.vue'
 
 const route = useRoute()
@@ -47,7 +48,7 @@ async function submit() {
       </svg>
       <div class="veil"></div>
       <div class="login-copy">
-        <span class="brand-mark lg"><Icon name="pin" :size="22" /></span>
+        <BrandMark :size="44" />
         <h2>Land parcel records, mapped and validated.</h2>
         <p>The GeoKitta officer workspace for registering owners and parcels from survey coordinates, recording
           ownership transfers and reviewing data quality.</p>
@@ -57,7 +58,7 @@ async function submit() {
     <div class="login-side">
       <form class="login-card" novalidate @submit.prevent="submit">
         <RouterLink class="brand" to="/" style="min-width: 0">
-          <span class="brand-mark"><Icon name="pin" :size="20" /></span>
+          <BrandMark :size="32" />
           <span><span class="brand-name">GeoKitta</span><span class="brand-sub">Officer workspace</span></span>
         </RouterLink>
         <h1>Officer sign in</h1>
