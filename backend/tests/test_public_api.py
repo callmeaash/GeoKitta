@@ -89,3 +89,17 @@ def test_outlines_for_result_ids(client):
     fc = client.post("/api/parcels/outlines", json={"ids": [pid]}).json()
     assert [f["id"] for f in fc["features"]] == [pid]
     assert client.post("/api/parcels/outlines", json={"ids": list(range(5001))}).status_code == 422
+
+
+@pytest.mark.parametrize("typed, expected", [("baluwatr", "Baluwatar"), ("thamal", "Thamel"), ("bagmti", "Bagmati")])
+def test_place_search_tolerates_spelling_mistakes(client, typed, expected):
+    body = client.get("/api/search", params={"q": typed}).json()
+    assert body["places"][0]["name"] == expected
+    assert body["suggestion"] == expected and body["places"][0]["distance"] >= 1
+    assert body["stats"]["comparisons"] <= body["stats"]["vocabulary"]
+
+
+def test_search_returns_parcels_for_numbers_and_no_suggestion_for_exact_names(client):
+    body = client.get("/api/search", params={"q": "4/12"}).json()
+    assert body["parcels"] and all(p["ward"] == 4 and p["kitta"] == 12 for p in body["parcels"])
+    assert client.get("/api/search", params={"q": "Thamel"}).json()["suggestion"] is None

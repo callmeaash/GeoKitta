@@ -12,7 +12,8 @@ from app.config import settings
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     try:
-        public.features()  # load roads and rivers once at startup, not on the first click
+        public.features()  # load roads, rivers and place names once at startup, not on the first click
+        public.gazetteer()
     except Exception:  # noqa: BLE001 - the API still starts without a database; requests will report it
         pass
     yield

@@ -21,6 +21,7 @@ const outlines = ref('hidden') // hidden | loading | shown | too_many | error
 const tip = ref({ show: false, x: 0, y: 0, text: '' })
 
 let map, bases, renderer, parcelsLayer, labelsLayer, selectedLayer, zoneLayer, featureLayer, drawLayer, resultsLayer
+let pinLayer
 let loadedBounds = null
 let loadController = null
 let hovered = null
@@ -217,6 +218,7 @@ onMounted(() => {
   selectedLayer = L.layerGroup().addTo(map)
   labelsLayer = L.layerGroup().addTo(map)
   drawLayer = L.layerGroup().addTo(map)
+  pinLayer = L.layerGroup().addTo(map)
 
   parcelsLayer.on('mousemove', e => {
     if (store.draw) return
@@ -278,6 +280,13 @@ watch(() => store.details, showSelected)
 watch(() => store.selectedId, () => map && updateLink())
 watch(() => store.results, showResults)
 watch(() => store.feature, showFeature)
+watch(() => store.placePin, pin => {
+  pinLayer.clearLayers()
+  if (!pin) return
+  L.circleMarker([pin.lat, pin.lng], { radius: 10, color: '#fff', weight: 3, fillColor: '#0F766E', fillOpacity: 1 })
+    .bindTooltip(pin.name, { direction: 'top', offset: [0, -10], permanent: true, className: 'pin-label' })
+    .addTo(pinLayer)
+})
 watch(() => store.layers.base, base => {
   for (const [name, layer] of Object.entries(bases)) {
     if (name === base) layer.addTo(map)
@@ -310,6 +319,7 @@ watch(() => store.flyTo, target => {
   if (target.home) map.flyTo(HOME.center, HOME.zoom)
   else if (target.geometry) map.flyToBounds(L.geoJSON(target.geometry).getBounds(), { maxZoom: 19, padding: [60, 60] })
   else if (target.bounds) map.flyToBounds(target.bounds, { maxZoom: 19, padding: [40, 40] })
+  else if (target.center) map.flyTo(target.center, target.zoom || 17)
   store.flyTo = null
 })
 

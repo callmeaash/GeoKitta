@@ -109,3 +109,28 @@ class RuleOut(BaseModel):
     measured_from: str
     source: str
     note: str | None
+
+
+class PlaceHit(BaseModel):
+    id: int
+    name: str
+    name_ne: str | None
+    kind: str
+    ward: int | None
+    lng: float
+    lat: float
+    distance: int = Field(description="Levenshtein edits between the query and the name")
+    edits: float = Field(description="edits over the matched words after folding spelling variants")
+
+
+class SearchStats(BaseModel):
+    vocabulary: int
+    comparisons: int = Field(description="Levenshtein computations the BK-tree needed")
+    ms: float
+
+
+class SearchResult(BaseModel):
+    places: list[PlaceHit]
+    parcels: list[ParcelSummary]
+    suggestion: str | None
+    stats: SearchStats

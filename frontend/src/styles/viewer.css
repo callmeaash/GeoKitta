@@ -72,3 +72,9 @@
   .basemap { top: auto; bottom: 30px; right: 10px; }
   .controls { top: 10px; right: 10px; }
 }
+
+.leaflet-tooltip.pin-label {
+  padding: 3px 8px; border: none; border-radius: var(--radius-sm); background: var(--color-heading); color: #fff;
+  font: 500 12px var(--font-sans); box-shadow: var(--shadow-float);
+}
+.leaflet-tooltip.pin-label::before { border-top-color: var(--color-heading); }

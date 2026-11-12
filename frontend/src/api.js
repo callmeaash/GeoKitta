@@ -49,8 +49,8 @@ export const api = {
 
   parcel: id => request(`/api/parcels/${id}`),
 
-  /** @returns {Promise<ParcelSummary[]>} */
-  search: (q, signal) => request(`/api/parcels/search?${qs({ q })}`, { signal }),
+  /** Places (fuzzy, Levenshtein) and parcels (by number), with a "did you mean" suggestion. */
+  search: (q, signal) => request(`/api/search?${qs({ q })}`, { signal }),
 
   /** @returns {Promise<ParcelList>} */
   select: body => post('/api/parcels/select', body),

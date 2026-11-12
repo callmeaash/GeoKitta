@@ -24,7 +24,8 @@ export const store = reactive({
 
   featureTypes: 'highway,road,river,stream,power_line',
   feature: null, // road or river picked for a buffer search
-  flyTo: null, // {geometry} | {bounds: [[s, w], [n, e]]} | {home: true}
+  flyTo: null, // {geometry} | {bounds: [[s, w], [n, e]]} | {center: [lat, lng], zoom} | {home: true}
+  placePin: null, // {name, lat, lng} of the place chosen in search
   toast: null
 })
 

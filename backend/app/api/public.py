@@ -10,7 +10,9 @@ from sqlalchemy.orm import Session
 
 from app.db import SessionLocal, get_session
 from app.schemas import (BufferRequest, FeatureOut, IdentifyResult, LookupStats, OutlinesRequest, ParcelDetails,
-                         ParcelList, ParcelSummary, RuleOut, SelectRequest)
+                         ParcelList, ParcelSummary, PlaceHit, RuleOut, SearchResult, SearchStats,
+                         SelectRequest)
+from app.search.gazetteer import Gazetteer
 from app.spatial.features import FeatureIndex, load_rules
 from app.spatial.geometry import polygon_area
 from app.spatial.index import QuadtreeIndex, load_polygons
@@ -28,6 +30,13 @@ SELECT id, pin, parcel_no, ward_no, map_sheet_code, land_use, parcel_type, regis
 FROM parcels WHERE id = ANY(:ids) AND status = 'active'
 ORDER BY ward_no, map_sheet_code, parcel_no
 """)
+
+
+@lru_cache(maxsize=1)
+def gazetteer() -> Gazetteer:
+    """Place names for search, loaded once."""
+    with SessionLocal() as db:
+        return Gazetteer.load(db)
 
 
 @lru_cache(maxsize=1)
@@ -111,8 +120,7 @@ def parcel_at(lat: float, lng: float, tolerance: float = Query(1.5, ge=0, le=25)
     return IdentifyResult(parcel=found[0] if found else None, stats=stats)
 
 
-@router.get("/parcels/search", response_model=list[ParcelSummary])
-def search_parcels(q: str = Query(min_length=1, max_length=40), db: Session = Depends(get_session)):
+def _find_parcels(db: Session, q: str) -> list[ParcelSummary]:
     """Parcels by PIN, by kitta number, or by ward and kitta ("4/123" or "ward 4 kitta 123")."""
     q = q.strip().upper()
     if q.startswith("KTM"):
@@ -126,6 +134,26 @@ def search_parcels(q: str = Query(min_length=1, max_length=40), db: Session = De
     ids = db.execute(text(f"SELECT id FROM parcels WHERE status = 'active' AND {sql} "
                           "ORDER BY ward_no, map_sheet_code LIMIT 20"), params).scalars().all()
     return _summaries(db, list(ids))
+
+
+@router.get("/parcels/search", response_model=list[ParcelSummary])
+def search_parcels(q: str = Query(min_length=1, max_length=40), db: Session = Depends(get_session)):
+    """Parcels by PIN, by kitta number, or by ward and kitta."""
+    return _find_parcels(db, q)
+
+
+@router.get("/search", response_model=SearchResult)
+def search(q: str = Query(min_length=1, max_length=80), db: Session = Depends(get_session)):
+    """Places by fuzzy name (Levenshtein, BK-tree) and parcels by number, with a "did you mean" suggestion."""
+    t0 = time.perf_counter()
+    found = gazetteer().search(q)
+    places = [PlaceHit(id=p.id, name=p.name, name_ne=p.name_ne, kind=p.kind, ward=p.ward, lng=p.lng, lat=p.lat,
+                       distance=m.distance, edits=m.score) for p, m in found]
+    suggestion = places[0].name if places and places[0].edits >= 1 else None  # best match needed real edits
+    stats = SearchStats(vocabulary=gazetteer().index.stats.get("vocabulary", 0),
+                        comparisons=gazetteer().index.stats.get("comparisons", 0),
+                        ms=round((time.perf_counter() - t0) * 1000, 2))
+    return SearchResult(places=places, parcels=_find_parcels(db, q), suggestion=suggestion, stats=stats)
 
 
 @router.get("/parcels/{parcel_id}", response_model=ParcelDetails)
