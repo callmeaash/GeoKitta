@@ -114,6 +114,52 @@ cd backend
 ..\.venv\Scripts\python -m app.spatial.evaluate   # quadtree vs brute-force loop at 200 / 10,000 / 50,000 / all parcels
 ```
 
+## Evaluation
+
+Each command writes its results to `data/evaluation/` (run from `backend/`):
+
+```
+..\.venv\Scripts\python -m app.spatial.evaluate   # linear quadtree vs brute-force loop at 200 / 10,000 / 50,000 / all parcels
+..\.venv\Scripts\python -m app.search.evaluate    # Levenshtein pairs, owner search, duplicate warning, place search
+..\.venv\Scripts\python -m app.defect_check       # city-wide scan compared with the planted defects (about 4 min)
+```
+
+Report charts: `python scripts/eval_charts.py OUT_DIR` (needs matplotlib, which the project itself does not use).
+
+Results on the full city (148,169 parcels):
+- **Quadtree:** a click reads about 14 index rows in about 2 ms, against 140 ms for the brute-force loop. Results were identical at every size.
+- **Owner search:** all 200 planted near-duplicates were flagged, and 1 of 500 distinct owners was flagged.
+- **Place search:** 294 of 300 misspelled places were found, and 0 of 300 random strings returned a result.
+- **Validation:** every planted defect was caught: 12/12 overlaps, 1/1 plus-sign cross, 10/10 slivers and 25/25 area mismatches.
+
+## Demo
+
+1. **Reset the data** after rehearsals: `.venv\Scripts\python -m pipeline --reset`, from the project root.
+   - It regenerates the same synthetic data from the fixed seed and keeps officer accounts and setback rules.
+   - It takes about 15 minutes, including the quadtree rebuild and the issue scan.
+   - Restart the backend afterwards, because it caches the owner and place indexes.
+2. **Public:**
+   - search "baluwatr" and get Baluwatar;
+   - zoom into Asan and click a parcel: details are shown with no owners;
+   - switch to Satellite;
+   - run a Buffer with the Bishnumati setback rule;
+   - Measure an area.
+3. **Officer:**
+   - log in and open the dashboard;
+   - in Owners, search "Shreshtha";
+   - in Register owner, type a near-duplicate name with the same date of birth and see the warning.
+4. **Parcel workflows:**
+   - Register parcel with `data/generated/survey/register_vacant_plot.csv`;
+   - Update parcel, then Update boundary or Split with the other survey samples;
+   - try an overlapping boundary and see it refused.
+5. **Records:**
+   - Transfer ownership with a BS deed date;
+   - place a rokka and try a transfer, which is blocked;
+   - release it (fukuwa) and open the parcel History.
+6. **Issues and admin:**
+   - open the plus-sign overlap in Issues;
+   - as admin, change a setback rule and rerun the setback search.
+
 ## Test
 
 ```
