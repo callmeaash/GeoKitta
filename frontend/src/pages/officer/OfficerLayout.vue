@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { request } from '../../api.js'
 import { useRoute, useRouter } from 'vue-router'
 import { auth, initials, logout } from '../../auth.js'
 import BrandMark from '../../components/BrandMark.vue'
@@ -12,10 +13,19 @@ const NAV = [
   { id: 'map', label: 'Map', icon: 'map', to: '/' },
   { id: 'parcels', label: 'Update parcel', icon: 'edit', to: '/officer/parcels' },
   { id: 'new-parcel', label: 'Register parcel', icon: 'plus', to: '/officer/parcels/new' },
+  { id: 'issues', label: 'Issues', icon: 'alert', to: '/officer/issues', badge: true },
   { id: 'owners', label: 'Owners', icon: 'users', to: '/officer/owners' },
   { id: 'new-owner', label: 'Register owner', icon: 'userPlus', to: '/officer/owners/new' }
 ]
 const active = computed(() => route.meta.nav)
+const openIssues = ref(null)
+async function countIssues() {
+  try {
+    openIssues.value = (await request('/api/officer/issues?status=open&limit=1')).counts.open
+  } catch { openIssues.value = null }
+}
+onMounted(countIssues)
+watch(() => route.fullPath, countIssues) // refresh the badge after reviews and saves
 const role = computed(() => [auth.officer?.office, auth.officer?.is_admin ? 'Admin' : null].filter(Boolean).join(' · '))
 
 async function signOut() {
@@ -35,6 +45,7 @@ async function signOut() {
         <RouterLink v-for="n in NAV" :key="n.id" :to="n.to" :class="{ active: active === n.id }"
                     :aria-current="active === n.id ? 'page' : null">
           <Icon :name="n.icon" :size="18" /><span>{{ n.label }}</span>
+          <span v-if="n.badge && openIssues" class="badge">{{ openIssues }}</span>
         </RouterLink>
       </nav>
       <div v-if="auth.officer" class="sb-user">

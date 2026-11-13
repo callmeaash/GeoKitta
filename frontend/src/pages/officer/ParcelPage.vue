@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { request } from '../../api.js'
 import Icon from '../../components/Icon.vue'
 import OwnershipCard from '../../components/OwnershipCard.vue'
+import RokkaDialog from '../../components/officer/RokkaDialog.vue'
 import PreviewMap from '../../components/officer/PreviewMap.vue'
 import { toRopani } from '../../utils/area.js'
 import { fmt, label, sourceLabel, statusClass, txnLabel } from '../../utils/format.js'
@@ -18,6 +19,15 @@ const saving = ref(false)
 const message = ref(typeof route.query.saved === 'string' ? route.query.saved : '')
 const warning = ref('')
 const formError = ref('')
+const placing = ref(false)
+const ownershipKey = ref(0)
+
+async function rokkaPlaced(r) {
+  placing.value = false
+  message.value = `Rokka placed, case ${r.case_id}. Transfers are blocked until it is released.`
+  ownershipKey.value++
+  await load()
+}
 
 async function load() {
   error.value = ''
@@ -83,7 +93,9 @@ async function saveDetails() {
       </div>
       <div v-if="rec" class="head-actions">
         <RouterLink class="btn btn-secondary" :to="{ path: '/', hash: `#parcel=${rec.id}` }"><Icon name="map" :size="16" />Show on map</RouterLink>
+        <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${rec.id}/history`"><Icon name="clock" :size="16" />History</RouterLink>
         <template v-if="active">
+          <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${rec.id}/transfer`"><Icon name="transfer" :size="16" />Transfer ownership</RouterLink>
           <RouterLink class="btn btn-secondary" :to="`/officer/parcels/${rec.id}/split`"><Icon name="split" :size="16" />Split</RouterLink>
           <RouterLink class="btn btn-primary" :to="`/officer/parcels/${rec.id}/boundary`"><Icon name="edit" :size="16" />Update boundary</RouterLink>
         </template>
@@ -131,7 +143,10 @@ async function saveDetails() {
           </form>
         </section>
 
-        <section class="box"><OwnershipCard :parcel-id="rec.id" /></section>
+        <section class="box">
+          <OwnershipCard :key="ownershipKey" :parcel-id="rec.id" />
+          <button v-if="active" class="btn btn-ghost btn-sm" @click="placing = true"><Icon name="lock" :size="14" />Place rokka (hold)</button>
+        </section>
 
         <section class="box flush">
           <div class="box-head"><div><h2 class="box-title">Cases</h2><p class="box-sub">Registrations, deeds, boundary updates and splits</p></div></div>
@@ -171,5 +186,6 @@ async function saveDetails() {
         </section>
       </div>
     </div>
+    <RokkaDialog v-if="placing" mode="place" :parcel-id="rec.id" @done="rokkaPlaced" @close="placing = false" />
   </main>
 </template>

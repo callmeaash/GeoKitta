@@ -178,10 +178,10 @@ def parcel_ownership(parcel_id: int, db: Session = Depends(get_session)):
         raise HTTPException(404, "parcel not found")
     owners = [OwnerOfParcel(owner_id=r[0], lin=r[1], full_name=r[2], owner_type=r[3], share=str(Fraction(r[4], r[5])),
                             valid_from=r[6], valid_to=r[7], case_id=r[8], txn_type=r[9], deed_ref=r[10]) for r in rows]
-    rokka = db.execute(text("SELECT requested_by_type, requested_by_name, reason, start_date FROM rokka "
+    rokka = db.execute(text("SELECT id, requested_by_type, requested_by_name, reason, start_date FROM rokka "
                             "WHERE parcel_id = :id AND fukuwa_date IS NULL ORDER BY start_date"),
                        {"id": parcel_id}).all()
     return ParcelOwnershipOut(parcel_id=parcel_id, current=[o for o in owners if o.valid_to is None],
                               history=[o for o in owners if o.valid_to is not None],
-                              rokka=[RokkaOut(requested_by_type=r[0], requested_by_name=r[1], reason=r[2],
-                                              start_date=r[3]) for r in rokka])
+                              rokka=[RokkaOut(id=r[0], requested_by_type=r[1], requested_by_name=r[2], reason=r[3],
+                                              start_date=r[4]) for r in rokka])

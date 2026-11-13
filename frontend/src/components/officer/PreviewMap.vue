@@ -18,7 +18,9 @@ const STYLES = {
   childA: { color: '#0F766E', weight: 2.5, fillColor: '#0F766E', fillOpacity: 0.24 },
   childB: { color: '#2563EB', weight: 2.5, fillColor: '#2563EB', fillOpacity: 0.2 },
   childC: { color: '#7C3AED', weight: 2.5, fillColor: '#7C3AED', fillOpacity: 0.2 },
-  overlap: { color: '#DC2626', weight: 1.5, fillColor: '#DC2626', fillOpacity: 0.45 }
+  overlap: { color: '#DC2626', weight: 1.5, fillColor: '#DC2626', fillOpacity: 0.45 },
+  issueA: { color: '#DC2626', weight: 2.5, fillColor: '#DC2626', fillOpacity: 0.06 },
+  issueB: { color: '#D97706', weight: 2.5, fillColor: '#D97706', fillOpacity: 0.08 }
 }
 
 const el = ref(null)

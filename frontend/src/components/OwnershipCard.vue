@@ -3,12 +3,21 @@ import { ref, watch } from 'vue'
 import { request } from '../api.js'
 import { label, shareLabel, txnLabel } from '../utils/format.js'
 import Icon from './Icon.vue'
+import RokkaDialog from './officer/RokkaDialog.vue'
 
 const props = defineProps({ parcelId: { type: Number, required: true } })
 const data = ref(null)
 const error = ref('')
+const releasing = ref(null)
+const emit = defineEmits(['changed'])
 
-watch(() => props.parcelId, async id => {
+async function released() {
+  releasing.value = null
+  await load(props.parcelId)
+  emit('changed')
+}
+
+async function load(id) {
   data.value = null
   error.value = ''
   try {
@@ -16,7 +25,8 @@ watch(() => props.parcelId, async id => {
   } catch (e) {
     error.value = e.status === 401 ? 'Your session has ended. Sign in again to see owners.' : e.message
   }
-}, { immediate: true })
+}
+watch(() => props.parcelId, load, { immediate: true })
 </script>
 
 <template>
@@ -29,7 +39,8 @@ watch(() => props.parcelId, async id => {
         <Icon name="lock" :size="16" />
         <div><strong>Rokka since {{ r.start_date }}</strong>
           <span>{{ r.requested_by_name }} ({{ label(r.requested_by_type) }}){{ r.reason ? ` — ${r.reason}` : '' }}.
-            Transfers are blocked until fukuwa.</span></div>
+            Transfers are blocked until fukuwa.</span>
+          <button class="link" style="margin-top: 4px" @click="releasing = r">Release (fukuwa)</button></div>
       </div>
       <ul class="owner-list">
         <li v-for="o in data.current" :key="o.owner_id">
@@ -49,6 +60,7 @@ watch(() => props.parcelId, async id => {
         </ul>
       </details>
     </template>
+    <RokkaDialog v-if="releasing" mode="release" :rokka="releasing" :parcel-id="parcelId" @done="released" @close="releasing = null" />
   </div>
 </template>
 

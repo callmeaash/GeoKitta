@@ -18,7 +18,10 @@ const routes = [
       { path: 'parcels/new', component: () => import('./pages/officer/RegisterParcelPage.vue'), meta: { nav: 'new-parcel' } },
       { path: 'parcels/:id(\\d+)', component: () => import('./pages/officer/ParcelPage.vue'), meta: { nav: 'parcels' } },
       { path: 'parcels/:id(\\d+)/boundary', component: () => import('./pages/officer/UpdateBoundaryPage.vue'), meta: { nav: 'parcels' } },
-      { path: 'parcels/:id(\\d+)/split', component: () => import('./pages/officer/SplitParcelPage.vue'), meta: { nav: 'parcels' } }
+      { path: 'parcels/:id(\\d+)/split', component: () => import('./pages/officer/SplitParcelPage.vue'), meta: { nav: 'parcels' } },
+      { path: 'parcels/:id(\\d+)/transfer', component: () => import('./pages/officer/TransferPage.vue'), meta: { nav: 'parcels' } },
+      { path: 'parcels/:id(\\d+)/history', component: () => import('./pages/officer/HistoryPage.vue'), meta: { nav: 'parcels' } },
+      { path: 'issues', component: () => import('./pages/officer/IssuesPage.vue'), meta: { nav: 'issues' } }
     ]
   },
   { path: '/:rest(.*)*', redirect: '/' }

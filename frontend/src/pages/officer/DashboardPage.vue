@@ -14,7 +14,8 @@ const firstName = computed(() => auth.officer?.full_name.split(' ')[0] || '')
 const ACTIONS = {
   login: 'Signed in', owner_registered: 'Registered owner', pipeline_import: 'Imported demo data',
   parcel_registered: 'Registered parcel', boundary_updated: 'Updated boundary', parcel_split: 'Split parcel',
-  details_updated: 'Corrected details of'
+  details_updated: 'Corrected details of', ownership_transferred: 'Transferred', rokka_placed: 'Placed rokka on',
+  rokka_released: 'Released rokka on', issue_reviewed: 'Reviewed an issue'
 }
 const actionText = a => {
   const base = ACTIONS[a.action] || label(a.action)
@@ -94,7 +95,7 @@ onMounted(async () => {
 
       <section class="box">
         <div class="box-head"><div><h2 class="box-title">Recent activity</h2><p class="box-sub">From the audit log</p></div>
-          <span class="status" :class="data?.open_issues ? 'st-amber' : 'st-green'">{{ data?.open_issues ?? '—' }} open issues</span>
+          <RouterLink class="status" :class="data?.open_issues ? 'st-amber' : 'st-green'" to="/officer/issues">{{ data?.open_issues ?? '—' }} open issues</RouterLink>
         </div>
         <ul class="checklist">
           <li v-for="(a, i) in data?.recent_activity || []" :key="i">

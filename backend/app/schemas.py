@@ -236,6 +236,7 @@ class OwnerOfParcel(BaseModel):
 
 
 class RokkaOut(BaseModel):
+    id: int
     requested_by_type: str
     requested_by_name: str
     reason: str | None
