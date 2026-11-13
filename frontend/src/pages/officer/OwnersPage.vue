@@ -1,4 +1,5 @@
 <script setup>
+import BsDate from '../../components/BsDate.vue'
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { request } from '../../api.js'
@@ -76,7 +77,7 @@ const match = h => (h.distance === 0 ? 'exact' : h.edits === 0 ? 'other spelling
               <td><RouterLink class="link" :to="`/officer/owners/${h.id}`" @click.stop>{{ h.full_name }}</RouterLink></td>
               <td class="num">{{ h.lin }}</td>
               <td>{{ label(h.owner_type) }}</td>
-              <td class="num">{{ h.date_of_birth || '—' }}</td>
+              <td><BsDate :date="h.date_of_birth" /></td>
               <td>{{ districtName(h.district_code) }}</td>
               <td class="num">{{ h.parcels }}</td>
               <td><span class="tag" :class="{ 'tag-teal': h.distance === 0 }">{{ match(h) }}</span></td>

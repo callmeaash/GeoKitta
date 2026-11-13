@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { request } from '../../api.js'
 import { auth, initials } from '../../auth.js'
 import Icon from '../../components/Icon.vue'
+import { bsText } from '../../utils/format.js'
 
 const officers = ref([])
 const error = ref('')
@@ -15,7 +16,7 @@ const busy = ref(false)
 const post = (url, body, method = 'POST') => request(url, {
   method, credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
 })
-const when = iso => (iso ? new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'Never')
+const when = iso => (iso ? `${bsText(iso)} ${new Date(iso).toLocaleTimeString('en-GB', { timeStyle: 'short' })}` : 'Never')
 
 async function load() {
   try {

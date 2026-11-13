@@ -1,14 +1,15 @@
 <script setup>
+import BsDate from '../../components/BsDate.vue'
 import { computed, onMounted, ref } from 'vue'
 import { request } from '../../api.js'
 import { auth } from '../../auth.js'
 import Icon from '../../components/Icon.vue'
-import { label, statusClass, txnLabel } from '../../utils/format.js'
+import { bsText, label, statusClass, todayAd, txnLabel } from '../../utils/format.js'
 
 const data = ref(null)
 const error = ref('')
 const nf = new Intl.NumberFormat('en-US')
-const today = new Date().toISOString().slice(0, 10)
+const today = todayAd()
 const firstName = computed(() => auth.officer?.full_name.split(' ')[0] || '')
 
 const ACTIONS = {
@@ -22,7 +23,7 @@ const actionText = a => {
   if (a.details?.name) return `${base}: ${a.details.name}${a.details.lin ? ` (${a.details.lin})` : ''}`
   return a.details?.pin ? `${base} ${a.details.pin}${a.details.case_id ? ` · case ${a.details.case_id}` : ''}` : base
 }
-const when = iso => new Date(iso).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })
+const when = iso => `${bsText(iso)} ${new Date(iso).toLocaleTimeString('en-GB', { timeStyle: 'short' })}`
 
 onMounted(async () => {
   try {
@@ -38,7 +39,7 @@ onMounted(async () => {
     <div class="page-head">
       <div>
         <h1 class="page-title">Namaste, {{ firstName }}</h1>
-        <p class="page-sub"><Icon name="calendar" :size="15" />{{ today }} · {{ auth.officer?.office || 'Officer' }}
+        <p class="page-sub"><Icon name="calendar" :size="15" />{{ bsText(today) }} <span class="muted">({{ today }} AD)</span> · {{ auth.officer?.office || 'Officer' }}
           · Kathmandu Metropolitan City</p>
       </div>
       <div class="head-actions">
@@ -84,7 +85,7 @@ onMounted(async () => {
                     {{ t.kitta }} · W{{ t.ward }}</RouterLink>
                   <span v-else class="muted">—</span>
                 </td>
-                <td class="num">{{ t.deed_date || '—' }}</td>
+                <td><BsDate :date="t.deed_date" /></td>
                 <td>{{ t.officer }}</td>
                 <td><span class="status" :class="statusClass(t.status)">{{ label(t.status) }}</span></td>
               </tr>

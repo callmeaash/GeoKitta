@@ -1,9 +1,10 @@
 <script setup>
+import BsDateInput from '../../components/BsDateInput.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { request } from '../../api.js'
 import Icon from '../../components/Icon.vue'
-import { DISTRICT_OPTIONS, districtName, label, plural } from '../../utils/format.js'
+import { DISTRICT_OPTIONS, bsText, districtName, label, plural, todayAd } from '../../utils/format.js'
 
 const router = useRouter()
 const TYPES = ['individual', 'organisation', 'government', 'communal']
@@ -128,8 +129,8 @@ const reasons = s => [s.likely_duplicate ? 'Likely the same owner' : null, s.sam
               <select id="gender" v-model="form.gender">
                 <option value="male">Male</option><option value="female">Female</option><option value="other">Other</option>
               </select></div>
-            <div class="field"><label for="dob">Date of birth (AD)</label>
-              <input id="dob" v-model="form.date_of_birth" type="date" class="input num" min="1900-01-01"></div>
+            <div class="field"><label for="dob">Date of birth</label>
+              <BsDateInput id="dob" v-model="form.date_of_birth" min="1918-04-13" :max="todayAd()" /></div>
           </template>
           <div class="field"><label for="cit">{{ individual ? 'Citizenship No.' : 'Registration No.' }}</label>
             <input id="cit" v-model="form.citizenship_no" type="text" class="num" placeholder="e.g. 27-01-74-05512">
@@ -161,7 +162,7 @@ const reasons = s => [s.likely_duplicate ? 'Likely the same owner' : null, s.sam
             <div>
               <strong>{{ s.full_name }} <span class="muted num">· {{ s.lin }}</span></strong>
               <span>{{ s.distance === 0 ? 'Same name' : `${s.distance} letter${s.distance > 1 ? 's' : ''} different` }}
-                <template v-if="s.date_of_birth"> · born {{ s.date_of_birth }}</template> · {{ plural(s.parcels, 'parcel') }}
+                <template v-if="s.date_of_birth"> · born {{ bsText(s.date_of_birth) }}</template> · {{ plural(s.parcels, 'parcel') }}
                 <template v-if="reasons(s)"><br>{{ reasons(s) }}</template></span>
             </div>
             <RouterLink class="link" :to="`/officer/owners/${s.id}`" target="_blank" style="margin-left: auto">View</RouterLink>
@@ -190,9 +191,9 @@ const reasons = s => [s.likely_duplicate ? 'Likely the same owner' : null, s.sam
         <div class="modal-body">
           <div class="compare">
             <div class="cmp-col"><h5>Entered</h5><div class="cmp-name">{{ form.full_name }}</div>
-              <div class="cmp-meta">{{ form.date_of_birth || '—' }} · {{ districtName(form.district_code) }}</div></div>
+              <div class="cmp-meta">{{ bsText(form.date_of_birth) }} · {{ districtName(form.district_code) }}</div></div>
             <div class="cmp-col existing"><h5>Existing record</h5><div class="cmp-name">{{ existing.full_name }}</div>
-              <div class="cmp-meta">{{ existing.date_of_birth || '—' }} · {{ districtName(existing.district_code) }} ·
+              <div class="cmp-meta">{{ bsText(existing.date_of_birth) }} · {{ districtName(existing.district_code) }} ·
                 {{ existing.lin }}</div></div>
           </div>
           <ul class="match-list">

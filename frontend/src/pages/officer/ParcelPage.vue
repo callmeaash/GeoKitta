@@ -1,4 +1,5 @@
 <script setup>
+import BsDate from '../../components/BsDate.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { request } from '../../api.js'
@@ -121,7 +122,7 @@ async function saveDetails() {
             <dt>Registered area</dt><dd>{{ fmt(rec.area_m2) }} m²<span class="sub">{{ toRopani(rec.area_m2) }} ropani-aana-paisa-daam</span></dd>
             <dt>Boundary area</dt><dd>{{ fmt(rec.boundary_area_m2) }} m²<span class="sub">{{ rec.boundary_versions }} earlier boundary version(s) in history</span></dd>
             <dt>Geometry</dt><dd>{{ sourceLabel(rec.geometry_source) }}<span v-if="rec.accuracy_m" class="sub">±{{ rec.accuracy_m }} m</span></dd>
-            <dt>Last changed</dt><dd>{{ new Date(rec.updated_at).toLocaleDateString('en-CA') }}</dd>
+            <dt>Last changed</dt><dd><BsDate :date="rec.updated_at" show-ad /></dd>
           </dl>
           <form v-else @submit.prevent="saveDetails">
             <div class="form-grid">
@@ -155,7 +156,7 @@ async function saveDetails() {
               <thead><tr><th>Case ID</th><th>Type</th><th>Date</th><th>Officer</th><th>Status</th></tr></thead>
               <tbody>
                 <tr v-for="c in rec.cases" :key="c.case_id" :title="c.remarks || ''">
-                  <td class="num">{{ c.case_id }}</td><td>{{ txnLabel(c.txn_type) }}</td><td class="num">{{ c.deed_date || '—' }}</td>
+                  <td class="num">{{ c.case_id }}</td><td>{{ txnLabel(c.txn_type) }}</td><td><BsDate :date="c.deed_date" /></td>
                   <td>{{ c.officer }}</td><td><span class="status" :class="statusClass(c.status)">{{ label(c.status) }}</span></td>
                 </tr>
                 <tr v-if="!rec.cases.length"><td colspan="5" class="muted">No cases recorded for this parcel.</td></tr>

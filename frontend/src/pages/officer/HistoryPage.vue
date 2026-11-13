@@ -1,4 +1,5 @@
 <script setup>
+import BsDate from '../../components/BsDate.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { request } from '../../api.js'
@@ -67,7 +68,7 @@ const shapes = computed(() => [
       <ol v-if="tab === 'timeline'" class="timeline">
         <li v-for="(e, n) in data.timeline" :key="n" class="tl-item">
           <span class="tl-dot" :style="{ background: dot(e.kind)[1] }"><Icon :name="dot(e.kind)[0]" :size="14" /></span>
-          <div class="tl-date">{{ e.date || '—' }}</div>
+          <div class="tl-date"><BsDate :date="e.date" show-ad /></div>
           <div class="tl-title">{{ e.title === 'Ownership transfer' ? `Ownership transfer — ${txnLabel(e.kind)}` : e.title }}</div>
           <div class="tl-desc">{{ e.detail }}</div>
           <div class="tl-meta"><span class="tag">Case {{ e.case_id }}</span><span v-if="e.deed_ref" class="tag">{{ e.deed_ref }}</span>
@@ -82,8 +83,8 @@ const shapes = computed(() => [
           <tbody>
             <tr v-for="o in periods" :key="o.owner_id + o.valid_from">
               <td><RouterLink class="link" :to="`/officer/owners/${o.owner_id}`">{{ o.full_name }}</RouterLink><span class="muted num"> · LIN {{ o.lin }}</span></td>
-              <td class="num">{{ shareLabel(o.share) }}</td><td class="num">{{ o.valid_from }}</td>
-              <td class="num"><span v-if="!o.valid_to" class="status st-green">Current</span><template v-else>{{ o.valid_to }}</template></td>
+              <td class="num">{{ shareLabel(o.share) }}</td><td><BsDate :date="o.valid_from" /></td>
+              <td class="num"><span v-if="!o.valid_to" class="status st-green">Current</span><BsDate v-else :date="o.valid_to" /></td>
               <td>{{ o.txn_type ? txnLabel(o.txn_type) : '—' }}</td>
             </tr>
           </tbody>
@@ -97,8 +98,8 @@ const shapes = computed(() => [
             <tbody>
               <tr v-for="b in data.boundaries" :key="b.version">
                 <td>Version {{ b.version }}</td><td class="num">{{ fmt(b.area_m2) }} m²</td>
-                <td class="num">{{ String(b.valid_from).slice(0, 10) }}</td>
-                <td class="num"><span v-if="!b.valid_to" class="status st-green">Current</span><template v-else>{{ String(b.valid_to).slice(0, 10) }}</template></td>
+                <td><BsDate :date="b.valid_from" /></td>
+                <td class="num"><span v-if="!b.valid_to" class="status st-green">Current</span><BsDate v-else :date="b.valid_to" /></td>
                 <td><button v-if="b.valid_to" class="link" @click="version = b.version">{{ version === b.version ? 'Shown' : 'Compare' }}</button></td>
               </tr>
             </tbody>

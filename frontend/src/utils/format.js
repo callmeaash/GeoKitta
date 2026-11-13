@@ -1,4 +1,5 @@
 /** Display helpers. */
+import { formatBs } from './bs.js'
 
 const nf1 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 })
 const nf0 = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
@@ -57,3 +58,13 @@ export const shareLabel = s => (s === '1' ? 'Full' : s)
 
 /** "1 parcel", "3 parcels" */
 export const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+/** A stored (AD) date as BS text for sentences, e.g. "2083-07-28 BS"; AD when outside the BS table. */
+export const bsText = ad => {
+  if (!ad) return '—'
+  const b = formatBs(ad)
+  return b ? `${b} BS` : `${String(ad).slice(0, 10)} AD`
+}
+
+/** Today in local time as "YYYY-MM-DD" (AD). */
+export const todayAd = () => new Date().toLocaleDateString('en-CA')

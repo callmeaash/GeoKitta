@@ -1,6 +1,8 @@
 <script setup>
+import BsDateInput from '../../components/BsDateInput.vue'
 import { reactive, ref } from 'vue'
 import { request } from '../../api.js'
+import { bsText, todayAd } from '../../utils/format.js'
 import Icon from '../Icon.vue'
 
 /** Place a rokka (hold) on a parcel, or release one (fukuwa). Each is recorded as its own case. */
@@ -10,7 +12,7 @@ const props = defineProps({
   rokka: { type: Object, default: null } // the hold to release
 })
 const emit = defineEmits(['done', 'close'])
-const today = new Date().toISOString().slice(0, 10)
+const today = todayAd()
 const form = reactive({ requested_by_type: 'bank', requested_by_name: '', reason: '', date: today, remarks: '' })
 const saving = ref(false)
 const error = ref('')
@@ -43,7 +45,7 @@ async function submit() {
       <div class="modal-head">
         <span class="modal-icon" :class="mode === 'place' ? 'red' : 'amber'"><Icon :name="mode === 'place' ? 'lock' : 'unlock'" :size="20" /></span>
         <div v-if="mode === 'place'"><h2>Place rokka</h2><p>Transfers of this parcel are blocked until the rokka is released (fukuwa).</p></div>
-        <div v-else><h2>Release rokka (fukuwa)</h2><p>Held for {{ rokka.requested_by_name }} since {{ rokka.start_date }}.</p></div>
+        <div v-else><h2>Release rokka (fukuwa)</h2><p>Held for {{ rokka.requested_by_name }} since {{ bsText(rokka.start_date) }}.</p></div>
       </div>
       <div class="modal-body">
         <div v-if="mode === 'place'" class="form-grid">
@@ -54,10 +56,10 @@ async function submit() {
             </select></div>
           <div class="field"><label for="rq-name">Name</label><input id="rq-name" v-model="form.requested_by_name" placeholder="e.g. Nilgiri Demo Bank"></div>
           <div class="field"><label for="rq-reason">Reason</label><input id="rq-reason" v-model="form.reason" placeholder="e.g. loan security"></div>
-          <div class="field"><label for="rq-date">Start date (AD)</label><input id="rq-date" v-model="form.date" type="date" :max="today"></div>
+          <div class="field"><label for="rq-date">Start date</label><BsDateInput id="rq-date" v-model="form.date" :max="today" /></div>
         </div>
         <div v-else class="form-grid">
-          <div class="field"><label for="fk-date">Release date (AD)</label><input id="fk-date" v-model="form.date" type="date" :min="rokka.start_date" :max="today"></div>
+          <div class="field"><label for="fk-date">Release date</label><BsDateInput id="fk-date" v-model="form.date" :min="rokka.start_date" :max="today" /></div>
           <div class="field"><label for="fk-rem">Remarks</label><input id="fk-rem" v-model="form.remarks" placeholder="e.g. loan repaid"></div>
         </div>
         <div v-if="error" class="banner banner-error" style="margin: 8px 0 0"><Icon name="alert" :size="16" /><span>{{ error }}</span></div>

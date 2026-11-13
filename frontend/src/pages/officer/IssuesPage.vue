@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { request } from '../../api.js'
 import Icon from '../../components/Icon.vue'
 import PreviewMap from '../../components/officer/PreviewMap.vue'
-import { fmt, label } from '../../utils/format.js'
+import { bsText, fmt, label } from '../../utils/format.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -61,7 +61,7 @@ const shapes = computed(() => !selected.value ? [] : [
   ...(selected.value.overlap_geometry ? [{ geometry: selected.value.overlap_geometry, kind: 'overlap' }] : [])
 ])
 const typeLabel = t => (TYPES.find(x => x[0] === t) || [t, label(t)])[1]
-const when = iso => new Date(iso).toLocaleDateString('en-CA')
+const when = iso => bsText(iso)
 </script>
 
 <template>

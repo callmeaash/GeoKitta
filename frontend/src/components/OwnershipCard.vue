@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { request } from '../api.js'
-import { label, shareLabel, txnLabel } from '../utils/format.js'
+import { bsText, label, shareLabel, txnLabel } from '../utils/format.js'
 import Icon from './Icon.vue'
 import RokkaDialog from './officer/RokkaDialog.vue'
 
@@ -37,7 +37,7 @@ watch(() => props.parcelId, load, { immediate: true })
     <template v-else>
       <div v-for="r in data.rokka" :key="r.start_date + r.requested_by_name" class="card card-error">
         <Icon name="lock" :size="16" />
-        <div><strong>Rokka since {{ r.start_date }}</strong>
+        <div><strong>Rokka since {{ bsText(r.start_date) }}</strong>
           <span>{{ r.requested_by_name }} ({{ label(r.requested_by_type) }}){{ r.reason ? ` — ${r.reason}` : '' }}.
             Transfers are blocked until fukuwa.</span>
           <button class="link" style="margin-top: 4px" @click="releasing = r">Release (fukuwa)</button></div>
@@ -46,7 +46,7 @@ watch(() => props.parcelId, load, { immediate: true })
         <li v-for="o in data.current" :key="o.owner_id">
           <RouterLink class="link" :to="`/officer/owners/${o.owner_id}`">{{ o.full_name }}</RouterLink>
           <span class="share">{{ shareLabel(o.share) }}</span>
-          <span class="sub">{{ o.lin }} · since {{ o.valid_from }}{{ o.txn_type ? ` · ${txnLabel(o.txn_type)}` : '' }}</span>
+          <span class="sub">{{ o.lin }} · since {{ bsText(o.valid_from) }}{{ o.txn_type ? ` · ${txnLabel(o.txn_type)}` : '' }}</span>
         </li>
       </ul>
       <details v-if="data.history.length" class="history">
@@ -55,7 +55,7 @@ watch(() => props.parcelId, load, { immediate: true })
           <li v-for="o in data.history" :key="o.owner_id + o.valid_from">
             <RouterLink class="link" :to="`/officer/owners/${o.owner_id}`">{{ o.full_name }}</RouterLink>
             <span class="share">{{ shareLabel(o.share) }}</span>
-            <span class="sub">{{ o.valid_from }} → {{ o.valid_to }}{{ o.txn_type ? ` · ${txnLabel(o.txn_type)}` : '' }}</span>
+            <span class="sub">{{ bsText(o.valid_from) }} → {{ bsText(o.valid_to) }}{{ o.txn_type ? ` · ${txnLabel(o.txn_type)}` : '' }}</span>
           </li>
         </ul>
       </details>

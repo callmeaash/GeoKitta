@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { request } from '../../api.js'
+import { bsText } from '../../utils/format.js'
 import { sumShares } from '../../utils/survey.js'
 import Icon from '../Icon.vue'
 
@@ -50,7 +51,7 @@ defineExpose({ ok })
       <div class="dropdown" :class="{ open: hits.length }">
         <div v-for="h in hits" :key="h.id" class="dd-item" @mousedown.prevent="add(h)">
           <span class="dd-icon"><Icon name="user" :size="16" /></span>{{ h.full_name }}
-          <span class="dd-type">{{ h.date_of_birth || h.owner_type }}</span><span class="meta">{{ h.lin }}</span>
+          <span class="dd-type">{{ h.date_of_birth ? `born ${bsText(h.date_of_birth)}` : h.owner_type }}</span><span class="meta">{{ h.lin }}</span>
         </div>
       </div>
     </div>

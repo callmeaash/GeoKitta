@@ -1,4 +1,6 @@
 <script setup>
+import BsDateInput from '../../components/BsDateInput.vue'
+import BsDate from '../../components/BsDate.vue'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { request } from '../../api.js'
@@ -7,14 +9,14 @@ import OwnerPicker from '../../components/officer/OwnerPicker.vue'
 import RokkaDialog from '../../components/officer/RokkaDialog.vue'
 import ValidationList from '../../components/officer/ValidationList.vue'
 import { toRopani } from '../../utils/area.js'
-import { fmt, label, shareLabel, txnLabel } from '../../utils/format.js'
+import { bsText, fmt, label, shareLabel, todayAd, txnLabel } from '../../utils/format.js'
 import { sumShares } from '../../utils/survey.js'
 
 const route = useRoute()
 const router = useRouter()
 const id = Number(route.params.id)
 const DEEDS = ['rajinama', 'hal_ko_bakaspatra', 'danpatra', 'ansha_banda', 'namasari', 'chhod_patra']
-const today = new Date().toISOString().slice(0, 10)
+const today = todayAd()
 
 const rec = ref(null)
 const own = ref(null)
@@ -48,14 +50,14 @@ const checks = computed(() => {
   const sharesOk = owners.value.length && total.value && total.value[0] === total.value[1]
   return [
     rokka.length
-      ? { id: 'rokka', status: 'fail', title: 'Active rokka', detail: `${rokka[0].requested_by_name} since ${rokka[0].start_date}. Release it (fukuwa) first.` }
+      ? { id: 'rokka', status: 'fail', title: 'Active rokka', detail: `${rokka[0].requested_by_name} since ${bsText(rokka[0].start_date)}. Release it (fukuwa) first.` }
       : { id: 'rokka', status: 'pass', title: 'No active rokka on this parcel', detail: 'Transfers are allowed.' },
     sharesOk
       ? { id: 'shares', status: sameAsNow.value ? 'fail' : 'pass', title: sameAsNow.value ? 'Nothing changes' : 'New shares add up to 1', detail: sameAsNow.value ? 'The new owners and shares are the same as now.' : `${owners.value.length} owner(s).` }
       : { id: 'shares', status: 'fail', title: 'Shares must add up to exactly 1', detail: owners.value.length ? 'For example 1/2 + 1/2.' : 'Add the new owners.' },
     form.deed_date && lastDate.value && form.deed_date < lastDate.value
-      ? { id: 'date', status: 'fail', title: 'Deed date is too early', detail: `The current owners hold the parcel since ${lastDate.value}.` }
-      : { id: 'date', status: form.deed_date && form.deed_date <= today ? 'pass' : 'fail', title: 'Deed date', detail: form.deed_date ? `${form.deed_date} (AD)` : 'Enter the deed date.' }
+      ? { id: 'date', status: 'fail', title: 'Deed date is too early', detail: `The current owners hold the parcel since ${bsText(lastDate.value)}.` }
+      : { id: 'date', status: form.deed_date && form.deed_date <= today ? 'pass' : 'fail', title: 'Deed date', detail: form.deed_date ? `${bsText(form.deed_date)} (${form.deed_date} AD)` : 'Enter a valid deed date.' }
   ]
 })
 const ok = computed(() => checks.value.length && checks.value.every(c => c.status === 'pass'))
@@ -101,7 +103,7 @@ async function released() {
     <div v-for="r in own?.rokka || []" :key="r.id" class="banner banner-error" role="alert">
       <Icon name="lock" :size="18" />
       <div><strong>Transfer blocked — active rokka</strong>
-        <span>Requested by {{ r.requested_by_name }} ({{ label(r.requested_by_type) }}) on {{ r.start_date }}{{ r.reason ? ` as ${r.reason}` : '' }}.
+        <span>Requested by {{ r.requested_by_name }} ({{ label(r.requested_by_type) }}) on {{ bsText(r.start_date) }}{{ r.reason ? ` as ${r.reason}` : '' }}.
           Release the rokka (fukuwa) before transferring.</span></div>
       <button class="btn btn-secondary btn-sm" style="margin-left: auto" @click="releasing = r">Release (fukuwa)</button>
     </div>
@@ -117,7 +119,7 @@ async function released() {
               <tr v-for="o in own.current" :key="o.owner_id">
                 <td><RouterLink class="link" :to="`/officer/owners/${o.owner_id}`">{{ o.full_name }}</RouterLink></td>
                 <td class="num">{{ o.lin }}</td><td class="num">{{ shareLabel(o.share) }}</td>
-                <td class="num">{{ o.valid_from }}</td><td>{{ o.txn_type ? txnLabel(o.txn_type) : '—' }}</td>
+                <td><BsDate :date="o.valid_from" /></td><td>{{ o.txn_type ? txnLabel(o.txn_type) : '—' }}</td>
               </tr>
             </tbody>
           </table></div>
@@ -128,7 +130,7 @@ async function released() {
           <div class="form-grid">
             <div class="field span-2"><label for="deed">Deed type</label>
               <select id="deed" v-model="form.deed_type"><option v-for="d in DEEDS" :key="d" :value="d">{{ txnLabel(d) }}</option></select></div>
-            <div class="field"><label for="ddate">Deed date (AD)</label><input id="ddate" v-model="form.deed_date" type="date" :max="today" :min="lastDate || '1950-01-01'"></div>
+            <div class="field"><label for="ddate">Deed date</label><BsDateInput id="ddate" v-model="form.deed_date" :max="today" :min="lastDate || '1950-01-01'" /></div>
             <div class="field"><label for="dref">Deed reference no.</label><input id="dref" v-model="form.deed_ref" placeholder="e.g. RJ-2026-00123"></div>
             <div class="field span-2"><label for="rem">Remarks</label><input id="rem" v-model="form.remarks"></div>
           </div>
@@ -152,7 +154,7 @@ async function released() {
           <dl class="kv wide" style="margin: 0">
             <dt>Land use</dt><dd>{{ label(rec.land_use) }}</dd>
             <dt>Parcel type</dt><dd>{{ label(rec.parcel_type) }}</dd>
-            <dt>Last change</dt><dd>{{ lastDate || '—' }}</dd>
+            <dt>Last change</dt><dd><BsDate :date="lastDate" /></dd>
           </dl>
         </section>
       </div>

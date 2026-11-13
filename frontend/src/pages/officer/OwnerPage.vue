@@ -1,4 +1,5 @@
 <script setup>
+import BsDate from '../../components/BsDate.vue'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { request } from '../../api.js'
@@ -43,7 +44,7 @@ watch(() => route.params.id, async id => {
           <dt>Type</dt><dd>{{ label(owner.owner_type) }}</dd>
           <template v-if="owner.owner_type === 'individual'">
             <dt>Gender</dt><dd>{{ label(owner.gender) }}</dd>
-            <dt>Date of birth</dt><dd>{{ owner.date_of_birth }}</dd>
+            <dt>Date of birth</dt><dd><BsDate :date="owner.date_of_birth" show-ad /></dd>
           </template>
           <dt>Citizenship No.</dt><dd>{{ owner.citizenship_no || '—' }}</dd>
           <dt>District</dt><dd>{{ districtName(owner.district_code) }}</dd>
@@ -66,7 +67,7 @@ watch(() => route.params.id, async id => {
                   <td>{{ label(h.parcel.land_use) }}</td>
                   <td class="num">{{ fmt(h.parcel.area_m2) }} m²</td>
                   <td class="num">{{ shareLabel(h.share) }}</td>
-                  <td class="num">{{ h.valid_from }}</td>
+                  <td><BsDate :date="h.valid_from" /></td>
                   <td>{{ h.txn_type ? txnLabel(h.txn_type) : '—' }}</td>
                   <td><RouterLink class="link" :to="{ path: '/', hash: `#parcel=${h.parcel.id}` }">Map</RouterLink></td>
                 </tr>
@@ -87,8 +88,8 @@ watch(() => route.params.id, async id => {
                   <td class="num">{{ h.parcel.kitta }} · W{{ h.parcel.ward }}</td>
                   <td class="num">{{ h.parcel.pin }}</td>
                   <td class="num">{{ shareLabel(h.share) }}</td>
-                  <td class="num">{{ h.valid_from }}</td>
-                  <td class="num">{{ h.valid_to }}</td>
+                  <td><BsDate :date="h.valid_from" /></td>
+                  <td><BsDate :date="h.valid_to" /></td>
                   <td>{{ h.txn_type ? txnLabel(h.txn_type) : '—' }}</td>
                 </tr>
               </tbody>
