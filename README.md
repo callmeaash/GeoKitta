@@ -70,11 +70,11 @@ cd backend
 ..\.venv\Scripts\python -m app.cli disable-officer sita.maharjan
 ```
 
-Passwords are stored as argon2 hashes. A signed-in officer gets an HttpOnly session cookie (8 hours). Signed in, the map shows each parcel's owners, shares and ownership history. The workspace has a dashboard, owner search (tolerant of spelling variants such as Shreshtha/Shrestha and Lakshmi/Laxmi), and owner registration with a duplicate check.
+Admins can also create, disable and reset officer accounts under Admin → Officer accounts, and edit the setback rules. Passwords are stored as argon2 hashes. A signed-in officer gets an HttpOnly session cookie (8 hours). Signed in, the map shows each parcel's owners, shares and ownership history. The workspace has a dashboard, owner search (tolerant of spelling variants such as Shreshtha/Shrestha and Lakshmi/Laxmi), and owner registration with a duplicate check.
 
 ### Parcel workflows
 
-Officers register parcels, update boundaries and split parcels (kitta kaat) from survey coordinates: typed, pasted, or uploaded as CSV (`point,easting,northing`) or GeoJSON. Boundaries are never drawn with the mouse. Every save is validated: a valid polygon, no overlap with neighbours (linear quadtree plus an exact test), area against the registered area, and a sliver check. Each save is recorded as a case with history, lineage, ownership and an audit log entry. The pipeline writes sample survey files to `data\generated\survey\` for all three workflows.
+Officers register parcels, update boundaries and split parcels (kitta kaat) from survey coordinates: typed, pasted, or uploaded as CSV (`point,easting,northing`) or GeoJSON. Boundaries are never drawn with the mouse. Every save is validated: a valid polygon, no overlap with neighbours (linear quadtree plus an exact test), area against the registered area, and a sliver check. Each save is recorded as a case with history, lineage, ownership and an audit log entry. Officers also record ownership transfers by deed (blocked while a rokka is active), place and release rokka, read each parcel's full history, and review the issues found by validation. The pipeline writes sample survey files to `data\generated\survey\` for all three workflows.
 
 To validate every parcel and record problems for review (the pipeline also runs this):
 

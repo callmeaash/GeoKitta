@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-from app.api import auth, issues, officer, parcels, public, records
+from app.api import admin, auth, issues, officer, parcels, public, records
 from app.config import settings
 
 
@@ -42,6 +42,7 @@ app.include_router(officer.router)
 app.include_router(parcels.router)
 app.include_router(records.router)
 app.include_router(issues.router)
+app.include_router(admin.router)
 
 
 @app.get("/api/health", tags=["system"])

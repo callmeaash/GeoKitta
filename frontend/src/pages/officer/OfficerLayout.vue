@@ -17,6 +17,10 @@ const NAV = [
   { id: 'owners', label: 'Owners', icon: 'users', to: '/officer/owners' },
   { id: 'new-owner', label: 'Register owner', icon: 'userPlus', to: '/officer/owners/new' }
 ]
+const ADMIN = [
+  { id: 'admin-officers', label: 'Officer accounts', icon: 'shield', to: '/officer/admin/officers' },
+  { id: 'admin-setback', label: 'Setback rules', icon: 'ruler', to: '/officer/admin/setback-rules' }
+]
 const active = computed(() => route.meta.nav)
 const openIssues = ref(null)
 async function countIssues() {
@@ -47,6 +51,13 @@ async function signOut() {
           <Icon :name="n.icon" :size="18" /><span>{{ n.label }}</span>
           <span v-if="n.badge && openIssues" class="badge">{{ openIssues }}</span>
         </RouterLink>
+        <template v-if="auth.officer?.is_admin">
+          <div class="sb-section">Admin</div>
+          <RouterLink v-for="n in ADMIN" :key="n.id" :to="n.to" :class="{ active: active === n.id }"
+                      :aria-current="active === n.id ? 'page' : null">
+            <Icon :name="n.icon" :size="18" /><span>{{ n.label }}</span>
+          </RouterLink>
+        </template>
       </nav>
       <div v-if="auth.officer" class="sb-user">
         <span class="avatar">{{ initials(auth.officer.full_name) }}</span>

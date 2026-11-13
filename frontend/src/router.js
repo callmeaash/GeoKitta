@@ -21,7 +21,9 @@ const routes = [
       { path: 'parcels/:id(\\d+)/split', component: () => import('./pages/officer/SplitParcelPage.vue'), meta: { nav: 'parcels' } },
       { path: 'parcels/:id(\\d+)/transfer', component: () => import('./pages/officer/TransferPage.vue'), meta: { nav: 'parcels' } },
       { path: 'parcels/:id(\\d+)/history', component: () => import('./pages/officer/HistoryPage.vue'), meta: { nav: 'parcels' } },
-      { path: 'issues', component: () => import('./pages/officer/IssuesPage.vue'), meta: { nav: 'issues' } }
+      { path: 'issues', component: () => import('./pages/officer/IssuesPage.vue'), meta: { nav: 'issues' } },
+      { path: 'admin/officers', component: () => import('./pages/officer/OfficersPage.vue'), meta: { nav: 'admin-officers', admin: true } },
+      { path: 'admin/setback-rules', component: () => import('./pages/officer/SetbackRulesPage.vue'), meta: { nav: 'admin-setback', admin: true } }
     ]
   },
   { path: '/:rest(.*)*', redirect: '/' }
@@ -32,6 +34,8 @@ export const router = createRouter({ history: createWebHistory(), routes })
 // Officer pages need a signed-in officer; the API enforces the same rule on every request.
 router.beforeEach(async to => {
   if (!to.matched.some(r => r.meta.officer)) return true
-  if (await loadOfficer()) return true
-  return { path: '/officer/login', query: { next: to.fullPath } }
+  const officer = await loadOfficer()
+  if (!officer) return { path: '/officer/login', query: { next: to.fullPath } }
+  if (to.matched.some(r => r.meta.admin) && !officer.is_admin) return { path: '/officer' } // admins only
+  return true
 })
